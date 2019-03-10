@@ -23,7 +23,7 @@ void loop() {
 
 	// серый квадрат
 	glColor3f(0.5, 0.5, 0.5);
-    glBegin(GL_QUADS);
+	glBegin(GL_QUADS);
 		glVertex2f(-0.8, -0.6);
 		glVertex2f( 0.8, -0.6);
 		glVertex2f( 0.8,  0.6);
@@ -42,8 +42,8 @@ void loop() {
 			glVertex2f(x, y); // центр
 			for(int i = 0; i <= n; i++) { 
 				glVertex2f(
-		            x + (radius * cos(i * twicePi / n)), 
-				    y + (radius * sin(i * twicePi / n))
+					x + (radius * cos(i * twicePi / n)), 
+					y + (radius * sin(i * twicePi / n))
 				);
 			}
 		glEnd();
@@ -51,7 +51,7 @@ void loop() {
 	
 	// зеленый треугольник
 	glColor3f(0, 1, 0);
-    glBegin(GL_POLYGON);
+	glBegin(GL_POLYGON);
 		glVertex2f(-0.7, -0.85);
 		glVertex2f( 0.7, -0.85);
 		glVertex2f( 0.0,  0.4);
