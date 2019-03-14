@@ -1,5 +1,6 @@
 #include <iostream> //cout, endl
 #include <cmath> //sin, cos
+#include <string> //sin, cos
 using namespace std;
 
 // библиотеки OpenGL
@@ -10,8 +11,11 @@ using namespace std;
 const int WIDTH  = 640;
 const int HEIGHT = 480;
 
+int frame_number = 0;
+double last_time = 0;
+
 // наш код, который будет выполняться каждый кадр
-void loop() {
+void loop(double time) {
 
 	// цвет очистки экрана - белый
 	glClearColor(1, 1, 1, 0);
@@ -24,10 +28,10 @@ void loop() {
 	// серый квадрат
 	glColor3f(0.5, 0.5, 0.5);
 	glBegin(GL_QUADS);
-		glVertex2f(-0.8, -0.6);
-		glVertex2f( 0.8, -0.6);
-		glVertex2f( 0.8,  0.6);
-		glVertex2f(-0.8,  0.6);
+		glVertex2f(-0.8, -0.6+sin(time)/10);
+		glVertex2f( 0.8, -0.6+cos(time)/10);
+		glVertex2f( 0.8,  0.6+cos(time)/10);
+		glVertex2f(-0.8,  0.6+sin(time)/10);
 	glEnd();
 
 	// красный круг
@@ -42,20 +46,41 @@ void loop() {
 			glVertex2f(x, y); // центр
 			for(int i = 0; i <= n; i++) { 
 				glVertex2f(
-					x + (radius * cos(i * twicePi / n)), 
-					y + (radius * sin(i * twicePi / n))
+					x + (radius * cos(i * twicePi / n))+sin(time*9)/10, 
+					y + (radius * sin(i * twicePi / n))+cos(time)/15
 				);
 			}
 		glEnd();
 	}
-	
+
 	// зеленый треугольник
 	glColor3f(0, 1, 0);
 	glBegin(GL_POLYGON);
-		glVertex2f(-0.7, -0.85);
-		glVertex2f( 0.7, -0.85);
-		glVertex2f( 0.0,  0.4);
+		glVertex2f(-0.7+sin(time*3)/15, -0.85+cos(time*3)/15);
+		glVertex2f( 0.7+sin(time*4)/15, -0.85+cos(time*4)/15);
+		glVertex2f( 0.0+sin(time*5)/15,  0.4 +cos(time*5)/15);
 	glEnd();
+}
+
+
+
+void setWindowFPS(GLFWwindow* window)
+{
+  // Measure speed
+  double current_time = glfwGetTime();
+  frame_number++;
+
+  if (current_time - last_time >= 1.0){ // If last cout was more than 1 sec ago
+    char title [20];
+    title [19] = '\0';
+
+    snprintf(title, 19, "[FPS: %d]", frame_number);
+
+    glfwSetWindowTitle(window, title);
+
+    frame_number = 0;
+    last_time  = current_time;
+  }
 }
 
 // функция, обрабатывающая нажатие на кнопки
@@ -98,8 +123,12 @@ int main() {
 	// пока окно не должно закрыться
 	while (!glfwWindowShouldClose(window)) {
 
+		// ставим фпсы
+		setWindowFPS(window);
+
 		// выполняем наш код
-		loop();
+		double time = glfwGetTime();
+		loop(time);
 
 		// выводим на экран (это вместо glFlush)
 		glfwSwapBuffers(window);
