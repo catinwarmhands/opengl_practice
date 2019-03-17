@@ -1,25 +1,33 @@
 #include "libs.cpp"
 
 #include "player.cpp"
+#include "camera.cpp"
 
-
-// размер окна
+// окно
+GLFWwindow* window;
 const int WIDTH  = 640;
 const int HEIGHT = 480;
 
 // номер текущего кадра
-int frame_number = 0;
+int frameNumber = 0;
 
-// последний замер времени
-double last_time = 0;
+// время
+double previousTime = 0;
+double currentTime  = 0;
+double dt           = 0;
 
-
-
-Player player;
-
-GLFWwindow* window;
-
-// размеры лабиринта и указатель на его матрицу
+// размеры лабиринта и его матрица
 const int MAZE_N = 51;
 const int MAZE_M = 51;
 int* maze = nullptr;
+
+Player player;
+Camera2D camera;
+vec2 cursorPosition;
+
+vector<GLuint> vertexShaders;
+vector<GLuint> fragmentShaders;
+vector<GLuint> shaderPrograms;
+
+int mode  = 1;
+int modeN = 3;

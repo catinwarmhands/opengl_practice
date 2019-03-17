@@ -1,6 +1,32 @@
 #include "libs.cpp"
 #include "globals.cpp"
 #include "utils.cpp"
+#include "shader.cpp"
+
+void draw_maze_matrix(int* maze) {
+	const float size = 2.0f/MAZE_N;
+	vec2 origin = {-1, 1};
+	vec2 cur;
+	for (int i = 0; i < MAZE_N; ++i) {
+		cur.y = origin.y - size*i;
+		for (int j = 0; j < MAZE_M; ++j) {
+			cur.x = origin.x + size*j;
+			int c = maze[i*MAZE_M+j];
+			switch (c) {
+				case -1: glColor3f(1, 0, 0); break;
+				case 0:  glColor3f(0, 1, 0); break;
+				case 1:  glColor3f(0, 0, 0); break;
+			}
+			vec2 o = {origin.x+(size*j), origin.y-(size*i)};
+			glBegin(GL_QUADS);
+				glVertex2f(cur.x,      cur.y-size);
+				glVertex2f(cur.x+size, cur.y-size);
+				glVertex2f(cur.x+size, cur.y);
+				glVertex2f(cur.x,      cur.y);
+			glEnd();
+		}
+	}
+}
 
 // сгенерировать матрицу лабиринта размера n строк на m столбцов
 // n и m доблжны быть нечетными
@@ -24,15 +50,19 @@ int* generate_maze_matrix(int n, int m) {
 		}
 	}
 
-	ivec2 cur = ivec2(1,1);
 	stack<ivec2> history;
+
+	ivec2 cur = {linearRand(1, n-2), linearRand(1, m-2)};
+	cur.x = cur.x + (1-cur.x%2);
+	cur.y = cur.y + (1-cur.y%2);
+
 	while (true) {
-		int unvisided_index = -1;
+		int unvisidedIndex = -1;
 		for (int i = 0; i < n*m; ++i)
 			if (maze[i] == UNVISITED)
-				unvisided_index = i;
+				unvisidedIndex = i;
 
-		if (unvisided_index == -1)
+		if (unvisidedIndex == -1)
 			break;
 
 		vector<ivec2> neighbours;
@@ -44,51 +74,29 @@ int* generate_maze_matrix(int n, int m) {
 				case 2: v += ivec2( 0,-2); break;
 				case 3: v += ivec2( 0, 2); break;
 			}
-			if (0 <= v.x && v.x < m && 0 <= v.y && v.y < n && maze[v.y*m + v.x])
+			if (0 <= v.x && v.x < m && 0 <= v.y && v.y < n && maze[v.y*m + v.x] == UNVISITED)
 				neighbours.push_back(v);
 		}
 
 		if (neighbours.size() != 0) {
 			history.push(cur);
-			ivec2 target = neighbours[random(0, (int)neighbours.size()-1)];
+			ivec2 target = neighbours[linearRand(0, (int)neighbours.size()-1)];
 			ivec2 wall = cur + ivec2(-sgn(cur.x-target.x), -sgn(cur.y-target.y));
 			maze[cur.y*m+cur.x] = maze[wall.y*m+wall.x] = maze[target.y*m+target.x] = EMPTY;
 			cur = target;
 
-			{
-				glClearColor(1, 1, 1, 0);
-
-				// очищаем экран
+			// debug draw
+			#if 0
 				glClear(GL_COLOR_BUFFER_BIT);
-
-				const float size = 2.0f/n;
-				vec2 origin = {-1, 1};
-
-				for (int i = 0; i < n; ++i) {
-					for (int j = 0; j < m; ++j) {
-						int c = maze[i*m+j];
-						switch (c) {
-							case -1: glColor3f(1, 0, 0); break;
-							case 0:  glColor3f(0, 1, 0); break;
-							case 1:  glColor3f(0, 0, 0); break;
-						}
-						glBegin(GL_QUADS);
-							glVertex2f(origin.x+(size*j),      origin.y-(size*i)-size);
-							glVertex2f(origin.x+(size*j)+size, origin.y-(size*i)-size);
-							glVertex2f(origin.x+(size*j)+size, origin.y-(size*i));
-							glVertex2f(origin.x+(size*j),      origin.y-(size*i));
-						glEnd();
-					}
-				}
-
+				draw_maze_matrix(maze);
 				glfwSwapBuffers(window);
 				Sleep(10);
-			}
+			#endif
 		} else if (history.size() != 0) {
 			cur = history.top();
 			history.pop();
 		} else {
-			cur = {unvisided_index%n, unvisided_index/n};
+			cur = {unvisidedIndex%n, unvisidedIndex/n};
 		}
 	}
 
@@ -100,72 +108,72 @@ void setup() {
 	// инициализация генератора рандомных чисел
 	srand(time(0));
 
+	// компилируем шейдеры
+	fragmentShaders.push_back(compile_shader_from_file("shaders\\basic.frag"));
+	fragmentShaders.push_back(compile_shader_from_file("shaders\\rainbow.frag"));
+	fragmentShaders.push_back(compile_shader_from_file("shaders\\fractal.frag"));
+	vertexShaders.push_back(  compile_shader_from_file("shaders\\basic.vert"));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[1]));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[2]));
+
+	// генерируем лабиринт
 	maze = generate_maze_matrix(MAZE_N, MAZE_M);
 }
 
 
-// наш код, который будет выполняться каждый кадр
-void loop(double time) {
-
-	// цвет очистки экрана - белый
-	glClearColor(1, 1, 1, 0);
-
+// код, который будет выполняться каждый кадр
+void loop() {
 	// очищаем экран
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// рисуем:
+	// draw_maze_matrix(maze);
 
-	// матрицу лабиринта
-	const float size = 2.0f/MAZE_N;
-	vec2 origin = {-1, 1};
-
-	for (int i = 0; i < MAZE_N; ++i) {
-		for (int j = 0; j < MAZE_M; ++j) {
-			int c = maze[i*MAZE_M+j];
-			switch (c) {
-				case -1: glColor3f(1, 0, 0); break;
-				case 0:  glColor3f(0, 1, 0); break;
-				case 1:  glColor3f(0, 0, 0); break;
-			}
-			glBegin(GL_QUADS);
-				glVertex2f(origin.x+(size*j),      origin.y-(size*i)-size);
-				glVertex2f(origin.x+(size*j)+size, origin.y-(size*i)-size);
-				glVertex2f(origin.x+(size*j)+size, origin.y-(size*i));
-				glVertex2f(origin.x+(size*j),      origin.y-(size*i));
-			glEnd();
-		}
-	}
+	// зеленый треугольник
+	glColor3f(1, 0.6, 0);
+	glBegin(GL_POLYGON);
+		glVertex3f(-0.5+sin(currentTime*3)/15, -0.5+cos(currentTime*3)/15, 1);
+		glVertex3f( 0.5+sin(currentTime*4)/15, -0.5+cos(currentTime*4)/15, 1);
+		glVertex3f( 0.0+sin(currentTime*5)/15,  0.5+cos(currentTime*5)/15, 1);
+	glEnd();
 }
 
-
-
-void setWindowFPS(GLFWwindow* window)
+void set_window_fps(int every=100)
 {
-  // Measure speed
-  double current_time = glfwGetTime();
-  frame_number++;
-
-  if (current_time - last_time >= 1.0){ // If last cout was more than 1 sec ago
-    char title [20];
-    title [19] = '\0';
-
-    snprintf(title, 19, "[FPS: %d]", frame_number);
-
-    glfwSetWindowTitle(window, title);
-
-    frame_number = 0;
-    last_time  = current_time;
-  }
+	if (frameNumber % every == 0) {
+		char title [50];
+		title [49] = '\0';
+		int fps = 1.0/dt;
+		snprintf(title, 49, "FPS: %d, dt: %f", fps, dt);
+		glfwSetWindowTitle(window, title);
+	}
 }
 
 // функция, обрабатывающая нажатие на кнопки
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) //если нажали на ESC
         glfwSetWindowShouldClose(window, GLFW_TRUE); //то окно надо закрыть
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
+    	mode += 1;
+    	if (mode > modeN)
+    		mode = 1;
+    }
+    // if (key == GLFW_KEY_A)
+    //     glRotatef(1, 0.0, 0.0, 1.0);
+    // if (key == GLFW_KEY_D)
+    //     glRotatef(-1, 0.0, 0.0, 1.0);
+    // if (key == GLFW_KEY_W)
+    //     glTranslatef(0.0, -0.01, 0.0);
+    // if (key == GLFW_KEY_S)
+    //     glTranslatef(0.0, 0.01, 0.0);
+}
+
+void cursor_pos_callback(GLFWwindow* window, double x, double y) {
+	cursorPosition.x = x;
+	cursorPosition.y = y;
 }
 
 int main() {
-	
 	// запускаем glfw
 	if (!glfwInit()) {
 		// если не запускается, то выключаемся
@@ -187,33 +195,58 @@ int main() {
 	// будем рисовать в это окно
 	glfwMakeContextCurrent(window);
 
-	// назначаем нашу функцию для обработки нажатий на клавиатуру
+	// коллбеки для клавиатуры и мыши
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, cursor_pos_callback);
 
-	// настраеваем камеру (что бы фигуры не растягивало)
+
+	// запускаем glew
+	GLenum glewErr = glewInit();
+	if (glewErr != GLEW_OK) {
+		// если не запускается, то отключаемся
+		cout << "[GLEW] failed to init: " << glewGetErrorString(glewErr) << endl;
+		glfwTerminate();
+		return 1;
+	}
+
 	glViewport(0, 0, WIDTH, HEIGHT);
-	glMatrixMode(GL_PROJECTION);
-	float aspect = (float)WIDTH / (float)HEIGHT;
-	glOrtho(-aspect, aspect, -1, 1, -1, 1);
+
+	// цвет очистки экрана - белый
+	// glClearColor(1, 1, 1, 0);
+
 
 	// наша инициализация
 	setup();
 
 	// пока окно не должно закрыться
 	while (!glfwWindowShouldClose(window)) {
-
-		// ставим фпсы
-		setWindowFPS(window);
-
-		// выполняем наш код
-		double time = glfwGetTime();
-		loop(time);
-
-		// выводим на экран (это вместо glFlush)
-		glfwSwapBuffers(window);
+		previousTime = currentTime;
+		currentTime = glfwGetTime();
+		dt = currentTime - previousTime;
 
 		// опрашиваем окно
 		glfwPollEvents();
+
+		// ставим фпсы
+		set_window_fps(500);
+
+		glUseProgram(shaderPrograms[mode-1]);
+		glUniform3fv(glGetUniformLocation(shaderPrograms[mode-1], "iResolution"), 1, value_ptr(vec3(WIDTH, HEIGHT, 1.f)));
+		glUniform2fv(glGetUniformLocation(shaderPrograms[mode-1], "iMouse"),      1, value_ptr(cursorPosition));
+		glUniform1f( glGetUniformLocation(shaderPrograms[mode-1], "iGlobalTime"),    (float)glfwGetTime());
+
+
+		// выполняем наш код
+		loop();
+
+		// glRotatef(camera.orientation, 0.0, 1.0, 0.0);
+		// glTranslatef(0.0, 0.0, -5.0);
+
+		// увеличиваем номер текущего кадра
+		frameNumber++;
+
+		// выводим на экран (это вместо glFlush)
+		glfwSwapBuffers(window);
 	}
 
 	// закрываем glfw
