@@ -2,7 +2,6 @@
 
 #include "libs.cpp"
 
-
 // знак числа {-1, 0, 1}
 template <typename T>
 int sgn(T val) {
@@ -11,7 +10,6 @@ int sgn(T val) {
 
 // вывести значение переменной иеё название на экран (для дебага)
 #define varprint(x) std::cout << #x << " = " << (x) << std::endl
-
 
 // заканчивается строка другой строкой
 bool ends_with(const string& s1, const string& s2) {
@@ -43,4 +41,25 @@ string read_file(const string& filePath) {
 	string result(data);
 	delete[] data;
 	return result;
+}
+
+// узнать, в какой папке лежит экзешник
+string exe_path() 
+{
+	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		char buffer[MAX_PATH];
+	    GetModuleFileName(NULL, buffer, MAX_PATH);
+	    string::size_type pos = string(buffer).find_last_of("\\/");
+	    if (pos == string::npos)
+	        return "";
+	    return string(buffer).substr(0, pos);
+	#else
+		#error [exe_path] only works on windows for now...
+	#endif
+}
+
+// узнать, в какой папке лежит проект
+string root_path() {
+	string s = exe_path();
+	return s.erase(s.find_last_of("\\/")+1);
 }

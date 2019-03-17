@@ -3,6 +3,9 @@
 #include "player.cpp"
 #include "camera.cpp"
 
+// путь до экзешника
+string rootPath;
+
 // окно
 GLFWwindow* window;
 const int WIDTH  = 640;

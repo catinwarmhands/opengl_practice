@@ -4,22 +4,6 @@ uniform vec3 iResolution;
 uniform float iGlobalTime;
 uniform vec2 iMouse;
 
-
-// #define SHOWONLYEDGES
-//#define NYAN 
-#define WAVES
-// #define BORDER
-
-#define RAY_STEPS 150
-
-#define BRIGHTNESS 1.2
-#define GAMMA 1.4
-#define SATURATION .65
-
-
-#define detail .001
-#define t iGlobalTime*.3
-
 void main() {
 	float time = iGlobalTime*3;
 	vec2 uv  = (gl_FragCoord.xy / 400.0-0.5)*8.0;

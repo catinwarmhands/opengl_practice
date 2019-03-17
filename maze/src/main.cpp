@@ -109,10 +109,11 @@ void setup() {
 	srand(time(0));
 
 	// компилируем шейдеры
-	fragmentShaders.push_back(compile_shader_from_file("shaders\\basic.frag"));
-	fragmentShaders.push_back(compile_shader_from_file("shaders\\rainbow.frag"));
-	fragmentShaders.push_back(compile_shader_from_file("shaders\\fractal.frag"));
-	vertexShaders.push_back(  compile_shader_from_file("shaders\\basic.vert"));
+	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.frag"));
+	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\rainbow.frag"));
+	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\fractal.frag"));
+	vertexShaders.push_back(  compile_shader_from_file(rootPath+"shaders\\basic.vert"));
+	vertexShaders.push_back(  compile_shader_from_file(rootPath+"shaders\\wobble.vert"));
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[1]));
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[2]));
@@ -129,12 +130,17 @@ void loop() {
 
 	// draw_maze_matrix(maze);
 
+	glUseProgram(shaderPrograms[mode-1]);
+	glUniform3fv(glGetUniformLocation(shaderPrograms[mode-1], "iResolution"), 1, value_ptr(vec3(WIDTH, HEIGHT, 1.f)));
+	glUniform2fv(glGetUniformLocation(shaderPrograms[mode-1], "iMouse"),      1, value_ptr(cursorPosition));
+	glUniform1f( glGetUniformLocation(shaderPrograms[mode-1], "iGlobalTime"),    (float)glfwGetTime());
+
 	// зеленый треугольник
 	glColor3f(1, 0.6, 0);
 	glBegin(GL_POLYGON);
-		glVertex3f(-0.5+sin(currentTime*3)/15, -0.5+cos(currentTime*3)/15, 1);
-		glVertex3f( 0.5+sin(currentTime*4)/15, -0.5+cos(currentTime*4)/15, 1);
-		glVertex3f( 0.0+sin(currentTime*5)/15,  0.5+cos(currentTime*5)/15, 1);
+		glVertex3f(-0.5, -0.5, 1);
+		glVertex3f( 0.5, -0.5, 1);
+		glVertex3f( 0.0,  0.5, 1);
 	glEnd();
 }
 
@@ -174,6 +180,9 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 }
 
 int main() {
+	// узнаем корневую директорию (для доступа к ресурсам)
+	rootPath = root_path();
+
 	// запускаем glfw
 	if (!glfwInit()) {
 		// если не запускается, то выключаемся
@@ -229,12 +238,6 @@ int main() {
 
 		// ставим фпсы
 		set_window_fps(500);
-
-		glUseProgram(shaderPrograms[mode-1]);
-		glUniform3fv(glGetUniformLocation(shaderPrograms[mode-1], "iResolution"), 1, value_ptr(vec3(WIDTH, HEIGHT, 1.f)));
-		glUniform2fv(glGetUniformLocation(shaderPrograms[mode-1], "iMouse"),      1, value_ptr(cursorPosition));
-		glUniform1f( glGetUniformLocation(shaderPrograms[mode-1], "iGlobalTime"),    (float)glfwGetTime());
-
 
 		// выполняем наш код
 		loop();
