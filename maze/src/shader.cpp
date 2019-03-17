@@ -63,7 +63,7 @@ GLuint link_shader_program(GLuint vertexShader, GLuint fragmentShader) {
 		glDeleteProgram(programID);
 		return 0;
 	}
-	cout << "[link_shader_program] ShaderProgram linking OK" << endl;
+	// cout << "[link_shader_program] ShaderProgram linking OK" << endl;
 
 	glValidateProgram(programID);
 

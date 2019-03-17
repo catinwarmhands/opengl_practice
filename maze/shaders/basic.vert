@@ -1,7 +1,7 @@
 #version 330 core
 
 layout (location = 0) in vec3 position;
-uniform vec3 iResolution;
+uniform ivec2 iResolution;
 uniform float iGlobalTime;
 uniform vec2 iMouse;
 

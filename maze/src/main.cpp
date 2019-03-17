@@ -117,6 +117,10 @@ void setup() {
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[1]));
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[2]));
+	// shaderPrograms.push_back(link_shader_program(vertexShaders[1], fragmentShaders[0]));
+	// shaderPrograms.push_back(link_shader_program(vertexShaders[1], fragmentShaders[1]));
+	// shaderPrograms.push_back(link_shader_program(vertexShaders[1], fragmentShaders[2]));
+	modeN = shaderPrograms.size();
 
 	// генерируем лабиринт
 	maze = generate_maze_matrix(MAZE_N, MAZE_M);
@@ -131,7 +135,7 @@ void loop() {
 	// draw_maze_matrix(maze);
 
 	glUseProgram(shaderPrograms[mode-1]);
-	glUniform3fv(glGetUniformLocation(shaderPrograms[mode-1], "iResolution"), 1, value_ptr(vec3(WIDTH, HEIGHT, 1.f)));
+	glUniform2iv(glGetUniformLocation(shaderPrograms[mode-1], "iResolution"), 1, value_ptr(resolution));
 	glUniform2fv(glGetUniformLocation(shaderPrograms[mode-1], "iMouse"),      1, value_ptr(cursorPosition));
 	glUniform1f( glGetUniformLocation(shaderPrograms[mode-1], "iGlobalTime"),    (float)glfwGetTime());
 
@@ -191,7 +195,7 @@ int main() {
 	}
 
 	// создаем окно
-	window = glfwCreateWindow(WIDTH, HEIGHT, "Maze game", NULL, NULL);
+	window = glfwCreateWindow(resolution.x, resolution.y, "Maze game", NULL, NULL);
 
 	// если не создалось
 	if (!window) {
@@ -218,7 +222,7 @@ int main() {
 		return 1;
 	}
 
-	glViewport(0, 0, WIDTH, HEIGHT);
+	// glViewport(0, 0, resolution.x, resolution.y);
 
 	// цвет очистки экрана - белый
 	// glClearColor(1, 1, 1, 0);

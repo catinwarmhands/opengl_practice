@@ -1,6 +1,6 @@
 #version 330 core
 
-uniform vec3 iResolution;
+uniform ivec2 iResolution;
 uniform float iGlobalTime;
 uniform vec2 iMouse;
 

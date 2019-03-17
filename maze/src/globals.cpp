@@ -8,8 +8,7 @@ string rootPath;
 
 // окно
 GLFWwindow* window;
-const int WIDTH  = 640;
-const int HEIGHT = 480;
+ivec2 resolution = {640, 480};
 
 // номер текущего кадра
 int frameNumber = 0;

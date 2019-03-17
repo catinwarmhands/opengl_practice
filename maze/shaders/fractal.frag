@@ -1,6 +1,6 @@
 #version 330 core
 
-uniform vec3 iResolution;
+uniform ivec2 iResolution;
 uniform float iGlobalTime;
 uniform vec2 iMouse;
 
@@ -198,10 +198,11 @@ vec3 move(inout vec3 dir) {
 // in vec3 myPos;
 
 void main() {
-	vec2 uv = gl_FragCoord.xy / iResolution.xy*2.-1.;
+	vec2 res = iResolution;
+	vec2 uv = gl_FragCoord.xy / res.xy*2.-1.;
 	vec2 oriuv=uv;
-	uv.y*=iResolution.y/iResolution.x;
-	vec2 mouse=(iMouse.xy/iResolution.xy-.5)*3.;
+	uv.y*=res.y/res.x;
+	vec2 mouse=(iMouse.xy/res.xy-.5)*3.;
 	if (iMouse.x<1.) mouse=vec2(0.,-0.05);
 	float fov=.9-max(0.,.7-iGlobalTime*.3);
 	vec3 dir=normalize(vec3(uv*fov,1.));
