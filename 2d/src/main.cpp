@@ -4,6 +4,7 @@
 using namespace std;
 
 // библиотеки OpenGL
+#define GLEW_STATIC
 #include "../libs/glew/include/GL/glew.h"
 #include "../libs/glfw64/include/GLFW/glfw3.h"
 
@@ -113,6 +114,15 @@ int main() {
 
 	// назначаем нашу функцию для обработки нажатий на клавиатуру
 	glfwSetKeyCallback(window, key_callback);
+
+	// запускаем glew
+	GLenum glewErr = glewInit();
+	if (glewErr != GLEW_OK) {
+		// если не запускается, то отключаемся
+		cout << "[GLEW] failed to init: " << glewGetErrorString(glewErr) << endl;
+		glfwTerminate();
+		return 1;
+	}
 
 	// настраеваем камеру (что бы фигуры не растягивало)
 	glViewport(0, 0, WIDTH, HEIGHT);
