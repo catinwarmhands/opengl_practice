@@ -87,6 +87,9 @@ int* generate_maze_matrix(int n, int m) {
 
 			// debug draw
 			#if 0
+				glfwPollEvents();
+				if (glfwWindowShouldClose(window))
+					break;
 				glClear(GL_COLOR_BUFFER_BIT);
 				draw_maze_matrix(maze);
 				glfwSwapBuffers(window);
@@ -112,18 +115,22 @@ void setup() {
 	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.frag"));
 	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\rainbow.frag"));
 	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\fractal.frag"));
-	vertexShaders.push_back(  compile_shader_from_file(rootPath+"shaders\\basic.vert"));
-	vertexShaders.push_back(  compile_shader_from_file(rootPath+"shaders\\wobble.vert"));
-	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
-	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[1]));
-	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[2]));
-	// shaderPrograms.push_back(link_shader_program(vertexShaders[1], fragmentShaders[0]));
-	// shaderPrograms.push_back(link_shader_program(vertexShaders[1], fragmentShaders[1]));
-	// shaderPrograms.push_back(link_shader_program(vertexShaders[1], fragmentShaders[2]));
+
+	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.vert"));
+	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\wobble.vert"));
+
+	int i = 0;
+	shaderPrograms.push_back(link_shader_program(vertexShaders[i], fragmentShaders[0]));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[i], fragmentShaders[1]));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[i], fragmentShaders[2]));
 	modeN = shaderPrograms.size();
 
 	// генерируем лабиринт
 	maze = generate_maze_matrix(MAZE_N, MAZE_M);
+
+	GLint nrAttributes;
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
+	std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
 }
 
 
@@ -139,12 +146,10 @@ void loop() {
 	glUniform2fv(glGetUniformLocation(shaderPrograms[mode-1], "iMouse"),      1, value_ptr(cursorPosition));
 	glUniform1f( glGetUniformLocation(shaderPrograms[mode-1], "iGlobalTime"),    (float)glfwGetTime());
 
-	// зеленый треугольник
-	glColor3f(1, 0.6, 0);
 	glBegin(GL_POLYGON);
-		glVertex3f(-0.5, -0.5, 1);
-		glVertex3f( 0.5, -0.5, 1);
-		glVertex3f( 0.0,  0.5, 1);
+		glVertex3f(-0.5, -0.5, 0);
+		glVertex3f( 0.5, -0.5, 0);
+		glVertex3f( 0.0,  0.5, 0);
 	glEnd();
 }
 
@@ -180,12 +185,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 	cursorPosition.x = x;
-	cursorPosition.y = y;
+	cursorPosition.y = resolution.y-y;
 }
 
 int main() {
 	// узнаем корневую директорию (для доступа к ресурсам)
-	rootPath = root_path();
+	rootPath = get_root_path();
 
 	// запускаем glfw
 	if (!glfwInit()) {

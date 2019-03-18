@@ -33,6 +33,7 @@ GLuint compile_shader_from_file(const string& filePath)  {
 			GL_LOG_ERROR();
 		cout << "[compile_shader_from_file] Shader '" << filePath << "' compilation errors:\n" << &error[0] << endl;
 		glDeleteShader(shaderID);
+		exit(1);
 		return 0;
 	}
 	cout << "[compile_shader_from_file] Shader '" << filePath << "' compilation OK" << endl;
@@ -61,6 +62,7 @@ GLuint link_shader_program(GLuint vertexShader, GLuint fragmentShader) {
 		glDetachShader(programID, vertexShader);
 		glDetachShader(programID, fragmentShader);
 		glDeleteProgram(programID);
+		exit(1);
 		return 0;
 	}
 	// cout << "[link_shader_program] ShaderProgram linking OK" << endl;
@@ -79,6 +81,7 @@ GLuint link_shader_program(GLuint vertexShader, GLuint fragmentShader) {
 		glDetachShader(programID, vertexShader);
 		glDetachShader(programID, fragmentShader);
 		glDeleteProgram(programID);
+		exit(1);
 		return 0;
 	}
 	cout << "[link_shader_program] ShaderProgram validation OK" << endl;

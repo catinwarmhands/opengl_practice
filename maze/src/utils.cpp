@@ -28,6 +28,7 @@ string read_file(const string& filePath) {
 
 	if (file == nullptr) {
 		cout << "[read_file] Cant open file '" << filePath << "'";
+		exit(1);
 		return "";
 	}
 
@@ -43,23 +44,25 @@ string read_file(const string& filePath) {
 	return result;
 }
 
-// узнать, в какой папке лежит экзешник
-string exe_path() 
+// узнать, в какой папке лежит проект
+string get_root_path() 
 {
 	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 		char buffer[MAX_PATH];
 	    GetModuleFileName(NULL, buffer, MAX_PATH);
-	    string::size_type pos = string(buffer).find_last_of("\\/");
-	    if (pos == string::npos)
-	        return "";
-	    return string(buffer).substr(0, pos);
-	#else
-		#error [exe_path] only works on windows for now...
-	#endif
-}
+	    string s(buffer);
+	    int count = 0;
+	    for (int i = s.length()-1; i >= 0; --i)
+	    {
+	    	if (s[i] == '\\' || s[i] == '/')
+	    		++count;
+	    	if (count == 2) {
+	    		return s.substr(0, i+1);
 
-// узнать, в какой папке лежит проект
-string root_path() {
-	string s = exe_path();
-	return s.erase(s.find_last_of("\\/")+1);
+	    	}
+	    }
+        return "";
+	#else
+		#error [root_path] only works on windows for now...
+	#endif
 }
