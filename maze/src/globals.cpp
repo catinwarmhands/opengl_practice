@@ -27,9 +27,17 @@ Player player;
 Camera2D camera;
 vec2 cursorPosition;
 
+vector<GLfloat> vertices;
+vector<GLuint> indices;
+GLuint VBO, VAO, EBO;
+
 vector<GLuint> vertexShaders;
 vector<GLuint> fragmentShaders;
 vector<GLuint> shaderPrograms;
 
 int mode  = 1;
 int modeN = 3;
+
+vector<GLuint> textures;
+
+bool wireframeMode = false;

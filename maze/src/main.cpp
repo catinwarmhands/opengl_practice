@@ -2,6 +2,7 @@
 #include "globals.cpp"
 #include "utils.cpp"
 #include "shader.cpp"
+#include "texture.cpp"
 
 void draw_maze_matrix(int* maze) {
 	const float size = 2.0f/MAZE_N;
@@ -111,26 +112,56 @@ void setup() {
 	// инициализация генератора рандомных чисел
 	srand(time(0));
 
+	// грузим вершины
+	vertices = {
+	    // Позиции          // Цвета             // Текстурные координаты
+	     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Верхний правый
+	     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Нижний правый
+	    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Нижний левый
+	    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Верхний левый
+	};
+
+	indices = {
+	    0, 1, 3,   // Первый треугольник
+	    1, 2, 3    // Второй треугольник
+	}; 
+
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
+	glBindVertexArray(VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLfloat)*indices.size(), &indices[0], GL_STATIC_DRAW);
+		// Атрибут с координатами
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+		// Атрибут с цветом
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3* sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
+		// Атрибут с текстурой
+		glVertexAttribPointer(2, 2, GL_FLOAT,GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(2); 
+	glBindVertexArray(0); 
+
+
 	// компилируем шейдеры
-	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.frag"));
-	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\rainbow.frag"));
-	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\fractal.frag"));
+	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basictexture.vert"));
+	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basictexture.frag"));
 
-	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.vert"));
-	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\wobble.vert"));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
 
-	int i = 0;
-	shaderPrograms.push_back(link_shader_program(vertexShaders[i], fragmentShaders[0]));
-	shaderPrograms.push_back(link_shader_program(vertexShaders[i], fragmentShaders[1]));
-	shaderPrograms.push_back(link_shader_program(vertexShaders[i], fragmentShaders[2]));
-	modeN = shaderPrograms.size();
+	// грузим текстуры
+	textures.push_back(load_texture_from_file(rootPath+"textures\\Test.png"));
+	textures.push_back(load_texture_from_file(rootPath+"textures\\grass_top.png"));
+	textures.push_back(load_texture_from_file(rootPath+"textures\\cobblestone.png"));
+
+	modeN = textures.size();
 
 	// генерируем лабиринт
 	maze = generate_maze_matrix(MAZE_N, MAZE_M);
-
-	GLint nrAttributes;
-	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
-	std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
 }
 
 
@@ -141,16 +172,15 @@ void loop() {
 
 	// draw_maze_matrix(maze);
 
-	glUseProgram(shaderPrograms[mode-1]);
-	glUniform2iv(glGetUniformLocation(shaderPrograms[mode-1], "iResolution"), 1, value_ptr(resolution));
-	glUniform2fv(glGetUniformLocation(shaderPrograms[mode-1], "iMouse"),      1, value_ptr(cursorPosition));
-	glUniform1f( glGetUniformLocation(shaderPrograms[mode-1], "iGlobalTime"),    (float)glfwGetTime());
+	glUseProgram(shaderPrograms[0]);
+	// glUniform2iv(glGetUniformLocation(shaderPrograms[mode-1], "iResolution"), 1, value_ptr(resolution));
+	// glUniform2fv(glGetUniformLocation(shaderPrograms[mode-1], "iMouse"),      1, value_ptr(cursorPosition));
+	// glUniform1f( glGetUniformLocation(shaderPrograms[mode-1], "iGlobalTime"),    (float)glfwGetTime());
 
-	glBegin(GL_POLYGON);
-		glVertex3f(-0.5, -0.5, 0);
-		glVertex3f( 0.5, -0.5, 0);
-		glVertex3f( 0.0,  0.5, 0);
-	glEnd();
+	glBindTexture(GL_TEXTURE_2D, textures[mode-1]);
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 }
 
 void set_window_fps(int every=100)
@@ -173,14 +203,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     	if (mode > modeN)
     		mode = 1;
     }
-    // if (key == GLFW_KEY_A)
-    //     glRotatef(1, 0.0, 0.0, 1.0);
-    // if (key == GLFW_KEY_D)
-    //     glRotatef(-1, 0.0, 0.0, 1.0);
-    // if (key == GLFW_KEY_W)
-    //     glTranslatef(0.0, -0.01, 0.0);
-    // if (key == GLFW_KEY_S)
-    //     glTranslatef(0.0, 0.01, 0.0);
+    if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+    	wireframeMode = !wireframeMode;
+    	if (wireframeMode) 
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		else
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }
 
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
@@ -250,9 +279,6 @@ int main() {
 
 		// выполняем наш код
 		loop();
-
-		// glRotatef(camera.orientation, 0.0, 1.0, 0.0);
-		// glTranslatef(0.0, 0.0, -5.0);
 
 		// увеличиваем номер текущего кадра
 		frameNumber++;

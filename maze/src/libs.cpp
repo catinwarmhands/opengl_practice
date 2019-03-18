@@ -22,3 +22,14 @@ using namespace std;
 #include "../libs/glm/gtc/matrix_transform.hpp"
 #include "../libs/glm/gtc/random.hpp"
 using namespace glm;
+
+// stb_image
+#ifdef __clang__
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wconstant-conversion"
+#endif
+#define STB_IMAGE_IMPLEMENTATION
+#include "../libs/stb/stb_image.h"
+#ifdef __clang__
+	#pragma clang diagnostic pop
+#endif

@@ -2,6 +2,22 @@
 
 #include "libs.cpp"
 
+// имена стандартных стипов
+#include <cstdint>
+using u8  = uint8_t;
+using u16 = uint16_t;
+using u32 = uint32_t;
+using u64 = uint64_t;
+using s8  = int8_t;
+using s16 = int16_t;
+using s32 = int32_t;
+using s64 = int64_t;
+using byte = u8;
+using float32 = float;
+using float64 = double;
+using f32 = float32;
+using f64 = float64;
+
 // знак числа {-1, 0, 1}
 template <typename T>
 int sgn(T val) {
