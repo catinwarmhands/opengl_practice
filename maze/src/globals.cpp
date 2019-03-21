@@ -41,3 +41,9 @@ int modeN = 3;
 vector<GLuint> textures;
 
 bool wireframeMode = false;
+
+mat4 model;
+mat4 view;
+mat4 projection;
+
+vector<vec3> cubePositions;

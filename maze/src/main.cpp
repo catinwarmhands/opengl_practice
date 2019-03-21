@@ -114,42 +114,89 @@ void setup() {
 
 	// грузим вершины
 	vertices = {
-	    // Позиции          // Цвета             // Текстурные координаты
-	     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Верхний правый
-	     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Нижний правый
-	    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Нижний левый
-	    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Верхний левый
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 	};
 
-	indices = {
-	    0, 1, 3,   // Первый треугольник
-	    1, 2, 3    // Второй треугольник
-	}; 
+	cubePositions = {
+		vec3( 0.0f,  0.0f,  0.0f), 
+		vec3( 2.0f,  5.0f, -15.0f), 
+		vec3(-1.5f, -2.2f, -2.5f),  
+		vec3(-3.8f, -2.0f, -12.3f),  
+		vec3( 2.4f, -0.4f, -3.5f),  
+		vec3(-1.7f,  3.0f, -7.5f),  
+		vec3( 1.3f, -2.0f, -2.5f),  
+		vec3( 1.5f,  2.0f, -2.5f), 
+		vec3( 1.5f,  0.2f, -1.5f), 
+		vec3(-1.3f,  1.0f, -1.5f)  
+	};
+
+	// indices = {
+	// 	0, 1, 3,   // Первый треугольник
+	// 	1, 2, 3    // Второй треугольник
+	// }; 
+
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLfloat)*indices.size(), &indices[0], GL_STATIC_DRAW);
-		// Атрибут с координатами
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-		// Атрибут с цветом
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3* sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
-		// Атрибут с текстурой
-		glVertexAttribPointer(2, 2, GL_FLOAT,GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(2); 
-	glBindVertexArray(0); 
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
+
+	// Position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	// TexCoord attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0); // Unbind VAO
 
 
 	// компилируем шейдеры
-	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basictexture.vert"));
-	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basictexture.frag"));
+	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.vert"));
+	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.frag"));
 
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
 
@@ -162,30 +209,40 @@ void setup() {
 
 	// генерируем лабиринт
 	maze = generate_maze_matrix(MAZE_N, MAZE_M);
+
+	view = translate(view, vec3(0.0f, 0.0f, -3.0f));
+	projection = perspective(radians(45.0f), (float)resolution.x/(float)resolution.y, 0.1f, 100.0f);
 }
 
 
 // код, который будет выполняться каждый кадр
 void loop() {
 	// очищаем экран
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// draw_maze_matrix(maze);
 
-	glUseProgram(shaderPrograms[0]);
-	// glUniform2iv(glGetUniformLocation(shaderPrograms[mode-1], "iResolution"), 1, value_ptr(resolution));
-	// glUniform2fv(glGetUniformLocation(shaderPrograms[mode-1], "iMouse"),      1, value_ptr(cursorPosition));
-	// glUniform1f( glGetUniformLocation(shaderPrograms[mode-1], "iGlobalTime"),    (float)glfwGetTime());
+	mat4 model;
+	model = rotate(model, radians((GLfloat)glfwGetTime()*55.0f), vec3(0.5f, 1.0f, 0.0f));
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glUniform1i(glGetUniformLocation(shaderPrograms[0], "ourTexture1"), 0);
-	glActiveTexture(GL_TEXTURE1);
+	
+	glUseProgram(shaderPrograms[0]);
+
+	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "view"),       1, GL_FALSE, value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "projection"), 1, GL_FALSE, value_ptr(projection));
+
 	glBindTexture(GL_TEXTURE_2D, textures[mode-1]);
-	glUniform1i(glGetUniformLocation(shaderPrograms[0], "ourTexture2"), 1);
-	// glBindTexture(GL_TEXTURE_2D, textures[mode-1]);
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	for(GLuint i = 0; i < 10; i++)
+	{
+		mat4 model;
+		model = translate(model, cubePositions[i]);
+		GLfloat angle = radians((GLfloat)glfwGetTime()*20.0f*(i+1));
+		model = rotate(model, angle, vec3(1.0f, 0.3f, 0.5f));
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
 	glBindVertexArray(0);
 }
 
@@ -263,6 +320,7 @@ int main() {
 	}
 
 	// glViewport(0, 0, resolution.x, resolution.y);
+	glEnable(GL_DEPTH_TEST);
 
 	// цвет очистки экрана - белый
 	// glClearColor(1, 1, 1, 0);
