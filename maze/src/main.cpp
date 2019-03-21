@@ -217,7 +217,7 @@ void setup() {
 	maze = generate_maze_matrix(MAZE_N, MAZE_M);
 
 	view = translate(view, vec3(0.0f, 0.0f, -3.0f));
-	projection = perspective(radians(45.0f), (float)resolution.x/(float)resolution.y, 0.1f, 100.0f);
+	projection = perspective(radians(45.0f), (float)frameBufferSize.x/(float)frameBufferSize.y, 0.1f, 100.0f);
 }
 
 
@@ -281,9 +281,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
+void window_size_callback(GLFWwindow* window, int width, int height)
+{
+	windowSize.x = width;
+	windowSize.y = height;
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	frameBufferSize.x = width;
+	frameBufferSize.y = height;
+	projection = perspective(radians(45.0f), (float)frameBufferSize.x/(float)frameBufferSize.y, 0.1f, 100.0f);
+    glViewport(0, 0, width, height);
+}
+
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 	cursorPosition.x = x;
-	cursorPosition.y = resolution.y-y;
+	cursorPosition.y = windowSize.y-y;
 }
 
 int main() {
@@ -298,7 +312,7 @@ int main() {
 	}
 
 	// создаем окно
-	window = glfwCreateWindow(resolution.x, resolution.y, "Maze game", NULL, NULL);
+	window = glfwCreateWindow(windowSize.x, windowSize.y, "Maze game", NULL, NULL);
 
 	// если не создалось
 	if (!window) {
@@ -308,12 +322,18 @@ int main() {
 		return 1;
 	}
 
+	// узнаем размер фреймбуфера
+	glfwGetFramebufferSize(window, &frameBufferSize.x, &frameBufferSize.y);
+
 	// будем рисовать в это окно
 	glfwMakeContextCurrent(window);
 
-	// коллбеки для клавиатуры и мыши
+	// коллбеки
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, cursor_pos_callback);
+	glfwSetWindowSizeCallback(window, window_size_callback);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
 
 
 	// запускаем glew
