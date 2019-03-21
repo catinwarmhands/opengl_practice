@@ -336,13 +336,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     if (key == GLFW_KEY_F11 && action == GLFW_PRESS) {
     	fullScreen = !fullScreen;
+		const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     	if (fullScreen) {
-			const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
+			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
     	}
 		else {
-			glfwSetWindowMonitor(window, 0, 0, 0, defaultWindowSize.x, defaultWindowSize.y, 60);
+			glfwSetWindowMonitor(window, 0, 100, 100, defaultWindowSize.x, defaultWindowSize.y, mode->refreshRate);
 		}
     }
     
