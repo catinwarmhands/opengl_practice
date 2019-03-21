@@ -7,7 +7,7 @@ GLuint load_texture_from_file(string filePath) {
 	int width, height, depth;
 	void* data = stbi_load(filePath.c_str(), &width, &height, &depth, STBI_rgb);
 	if (!data) {
-		std::cout << "[load_texture_from_file] cant load file '" << filePath << "'" << endl;
+		std::cout << "[load_texture_from_file] Cant load file '" << filePath << "'" << endl;
 		exit(1);
 	}
 	GLuint textureID;
@@ -20,6 +20,6 @@ GLuint load_texture_from_file(string filePath) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     stbi_image_free(data);
-    cout << "[load_texture_from_file] texture '" << filePath << "' loaded OK" << endl;
+    cout << "[load_texture_from_file] Texture '" << filePath << "' loaded OK" << endl;
     return textureID;
 }

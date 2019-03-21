@@ -112,6 +112,8 @@ void setup() {
 	// инициализация генератора рандомных чисел
 	srand(time(0));
 
+	glClearColor(0.5, 0.6, 0.7, 0);
+
 	// грузим вершины
 	vertices = {
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -237,7 +239,7 @@ void loop() {
 	{
 		mat4 model;
 		model = translate(model, cubePositions[i]);
-		GLfloat angle = radians((GLfloat)glfwGetTime()*20.0f*(i+1));
+		GLfloat angle = radians((GLfloat)currentTime*20.0f*(i+1));
 		model = rotate(model, angle, vec3(1.0f, 0.3f, 0.5f));
 		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
 
