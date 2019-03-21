@@ -203,7 +203,7 @@ void setup() {
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
 
 	// грузим текстуры
-	textures.push_back(load_texture_from_file(rootPath+"textures\\harry.png"));
+	textures.push_back(load_texture_from_file(rootPath+"textures\\harry.jpg"));
 	textures.push_back(load_texture_from_file(rootPath+"textures\\cat.png"));
 	textures.push_back(load_texture_from_file(rootPath+"textures\\mad.jpg"));
 	textures.push_back(load_texture_from_file(rootPath+"textures\\pearl.png"));
@@ -218,21 +218,67 @@ void setup() {
 
 	view = translate(view, vec3(0.0f, 0.0f, -3.0f));
 	projection = perspective(radians(45.0f), (float)frameBufferSize.x/(float)frameBufferSize.y, 0.1f, 100.0f);
+
+	double x, y;
+	glfwGetCursorPos(window, &x, &y);
+	input.cursorPosition = {x,y};
+
+	camera.yaw = -90;
+}
+
+void do_camera_movement()
+{
+	camera.yaw   += input.cursorOffset.x;
+	camera.pitch += input.cursorOffset.y;
+	input.cursorOffset.x = 0;
+	input.cursorOffset.y = 0;
+
+	if (camera.pitch > 89.0f)
+		camera.pitch =  89.0f;
+	if (camera.pitch < -89.0f)
+		camera.pitch = -89.0f;
+
+	vec3 front;
+	front.x = cos(radians(camera.pitch)) * cos(radians(camera.yaw));
+	front.y = sin(radians(camera.pitch));
+	front.z = cos(radians(camera.pitch)) * sin(radians(camera.yaw));
+	camera.front = normalize(front);
+
+	float speed = cameraSpeed*dt;
+
+	if (input.keys[GLFW_KEY_W])
+		camera.position += speed * camera.front;
+	if (input.keys[GLFW_KEY_S])
+		camera.position -= speed * camera.front;
+	if (input.keys[GLFW_KEY_A])
+		camera.position -= normalize(cross(camera.front, camera.up)) * speed;
+	if (input.keys[GLFW_KEY_D])
+		camera.position += normalize(cross(camera.front, camera.up)) * speed; 
+	if (input.keys[GLFW_KEY_SPACE])
+		camera.position += speed * camera.up; 
+	if (input.keys[GLFW_KEY_LEFT_CONTROL])
+		camera.position -= speed * camera.up; 
 }
 
 
 // код, который будет выполняться каждый кадр
 void loop() {
+
+	do_camera_movement();
 	// очищаем экран
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// draw_maze_matrix(maze);
 
 	mat4 model;
-	model = rotate(model, radians((GLfloat)glfwGetTime()*55.0f), vec3(0.5f, 1.0f, 0.0f));
+	model = rotate(model, radians((GLfloat)currentTime*55.0f), vec3(0.5f, 1.0f, 0.0f));
 
 	
 	glUseProgram(shaderPrograms[0]);
+
+	// GLfloat radius = 10.0f;
+	mat4 view;
+	view = lookAt(camera.position, camera.position + camera.front, camera.up);
 
 	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "view"),       1, GL_FALSE, value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "projection"), 1, GL_FALSE, value_ptr(projection));
@@ -251,6 +297,8 @@ void loop() {
 	}
 	glBindVertexArray(0);
 }
+
+
 
 void set_window_fps(int every=100)
 {
@@ -279,6 +327,30 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		else
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+    if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+    	mouseLock = !mouseLock;
+    	if (mouseLock) 
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		else
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    if (key == GLFW_KEY_F11 && action == GLFW_PRESS) {
+    	fullScreen = !fullScreen;
+    	if (fullScreen) {
+			const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
+    	}
+		else {
+			glfwSetWindowMonitor(window, 0, 0, 0, defaultWindowSize.x, defaultWindowSize.y, 60);
+		}
+    }
+    
+
+	if (action == GLFW_PRESS)
+		input.keys[key] = true;
+	else if(action == GLFW_RELEASE)
+		input.keys[key] = false;
 }
 
 void window_size_callback(GLFWwindow* window, int width, int height)
@@ -296,8 +368,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
-	cursorPosition.x = x;
-	cursorPosition.y = windowSize.y-y;
+	input.cursorOffset.x = (x - input.cursorPosition.x)*mouseSensitivity;
+	input.cursorOffset.y = (input.cursorPosition.y - y)*mouseSensitivity;
+	input.cursorPosition.x = x;
+	input.cursorPosition.y = y;
 }
 
 int main() {
@@ -335,6 +409,7 @@ int main() {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// запускаем glew
 	GLenum glewErr = glewInit();

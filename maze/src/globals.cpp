@@ -2,13 +2,15 @@
 
 #include "player.cpp"
 #include "camera.cpp"
+#include "input.cpp"
 
 // путь до экзешника
 string rootPath;
 
 // окно
 GLFWwindow* window;
-ivec2 windowSize = {640, 480};
+ivec2 defaultWindowSize = {640, 480};
+ivec2 windowSize = defaultWindowSize;
 ivec2 frameBufferSize;
 
 // номер текущего кадра
@@ -26,7 +28,7 @@ int* maze = nullptr;
 
 Player player;
 Camera2D camera;
-vec2 cursorPosition;
+
 
 vector<GLfloat> vertices;
 vector<GLuint> indices;
@@ -42,9 +44,16 @@ int modeN = 3;
 vector<GLuint> textures;
 
 bool wireframeMode = false;
+bool mouseLock = true;
+bool fullScreen = false;
 
 mat4 model;
 mat4 view;
 mat4 projection;
 
 vector<vec3> cubePositions;
+
+float cameraSpeed = 5.0f;
+float mouseSensitivity = 0.1f;
+
+InputState input;
