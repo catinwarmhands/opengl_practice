@@ -13,6 +13,8 @@ GLuint load_texture_from_file(string filePath) {
 	GLuint textureID;
 	glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
+    if ((width*height)%4 != 0)
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE);

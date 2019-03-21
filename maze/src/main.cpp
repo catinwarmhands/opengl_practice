@@ -203,9 +203,13 @@ void setup() {
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
 
 	// грузим текстуры
-	textures.push_back(load_texture_from_file(rootPath+"textures\\grass_side.png"));
-	textures.push_back(load_texture_from_file(rootPath+"textures\\grass_top.png"));
-	textures.push_back(load_texture_from_file(rootPath+"textures\\cobblestone.png"));
+	textures.push_back(load_texture_from_file(rootPath+"textures\\harry.png"));
+	textures.push_back(load_texture_from_file(rootPath+"textures\\cat.png"));
+	textures.push_back(load_texture_from_file(rootPath+"textures\\mad.jpg"));
+	textures.push_back(load_texture_from_file(rootPath+"textures\\pearl.png"));
+	// textures.push_back(load_texture_from_file(rootPath+"textures\\grass_side.png"));
+	// textures.push_back(load_texture_from_file(rootPath+"textures\\grass_top.png"));
+	// textures.push_back(load_texture_from_file(rootPath+"textures\\cobblestone.png"));
 
 	modeN = textures.size();
 
