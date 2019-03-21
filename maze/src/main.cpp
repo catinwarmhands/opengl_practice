@@ -154,7 +154,7 @@ void setup() {
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
 
 	// грузим текстуры
-	textures.push_back(load_texture_from_file(rootPath+"textures\\Test.png"));
+	textures.push_back(load_texture_from_file(rootPath+"textures\\grass_side.png"));
 	textures.push_back(load_texture_from_file(rootPath+"textures\\grass_top.png"));
 	textures.push_back(load_texture_from_file(rootPath+"textures\\cobblestone.png"));
 
@@ -177,7 +177,13 @@ void loop() {
 	// glUniform2fv(glGetUniformLocation(shaderPrograms[mode-1], "iMouse"),      1, value_ptr(cursorPosition));
 	// glUniform1f( glGetUniformLocation(shaderPrograms[mode-1], "iGlobalTime"),    (float)glfwGetTime());
 
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	glUniform1i(glGetUniformLocation(shaderPrograms[0], "ourTexture1"), 0);
+	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, textures[mode-1]);
+	glUniform1i(glGetUniformLocation(shaderPrograms[0], "ourTexture2"), 1);
+	// glBindTexture(GL_TEXTURE_2D, textures[mode-1]);
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
