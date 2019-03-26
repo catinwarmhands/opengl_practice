@@ -9,6 +9,9 @@ uniform sampler2D ourTexture2;
 
 void main()
 {
+	// float ndcDepth = (2.0 * gl_FragCoord.z - gl_DepthRange.near - gl_DepthRange.far) / (gl_DepthRange.far - gl_DepthRange.near);
+	// float clipDepth = ndcDepth / gl_FragCoord.w;
+	// color = vec4((clipDepth * 0.1) + 0.5); 
 	// color = vec4(ourColor, 1);
     color = texture(ourTexture1, TexCoord);
     // color = mix(texture(ourTexture1, TexCoord), texture(ourTexture2, TexCoord), 0.5);

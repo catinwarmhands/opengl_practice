@@ -3,6 +3,7 @@
 #include "player.cpp"
 #include "camera.cpp"
 #include "input.cpp"
+#include "model.cpp"
 
 // путь до экзешника
 string rootPath;
@@ -30,9 +31,6 @@ Player player;
 Camera2D camera;
 
 
-vector<GLfloat> vertices;
-vector<GLuint> indices;
-GLuint VBO, VAO, EBO;
 
 vector<GLuint> vertexShaders;
 vector<GLuint> fragmentShaders;
@@ -57,3 +55,5 @@ float cameraSpeed = 5.0f;
 float mouseSensitivity = 0.1f;
 
 InputState input;
+
+Model cube;
