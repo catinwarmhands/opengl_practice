@@ -4,101 +4,7 @@
 #include "shader.cpp"
 #include "texture.cpp"
 #include "model.cpp"
-
-
-void draw_maze_matrix(int* maze) {
-	const float size = 2.0f/MAZE_N;
-	vec2 origin = {-1, 1};
-	vec2 cur;
-	for (int i = 0; i < MAZE_N; ++i) {
-		cur.y = origin.y - size*i;
-		for (int j = 0; j < MAZE_M; ++j) {
-			cur.x = origin.x + size*j;
-			int c = maze[i*MAZE_M+j];
-			switch (c) {
-				case -1: glColor3f(1, 0, 0); break;
-				case 0:  glColor3f(0, 1, 0); break;
-				case 1:  glColor3f(0, 0, 0); break;
-			}
-			vec2 o = {origin.x+(size*j), origin.y-(size*i)};
-			glBegin(GL_QUADS);
-				glVertex2f(cur.x,      cur.y-size);
-				glVertex2f(cur.x+size, cur.y-size);
-				glVertex2f(cur.x+size, cur.y);
-				glVertex2f(cur.x,      cur.y);
-			glEnd();
-		}
-	}
-}
-
-// сгенерировать матрицу лабиринта размера n строк на m столбцов
-// n и m доблжны быть нечетными
-// алгоритм: https://habr.com/ru/post/262345/
-int* generate_maze_matrix(int n, int m) {
-	enum CellType {
-		UNVISITED = -1,
-		EMPTY     =  0,
-		WALL      =  1
-	};
-
-	int* maze = new int[n*m];
-
-	for (int i = 0; i < n; ++i) {
-		for (int j = 0; j < m; ++j) {
-			int pos = i*m+j;
-			if (i % 2 == 0 || j % 2 == 0)
-				maze[pos] = WALL;
-			else
-				maze[pos] = UNVISITED;
-		}
-	}
-
-	stack<ivec2> history;
-
-	ivec2 cur = {linearRand(1, n-2), linearRand(1, m-2)};
-	cur.x = cur.x + (1-cur.x%2);
-	cur.y = cur.y + (1-cur.y%2);
-
-	while (true) {
-		int unvisidedIndex = -1;
-		for (int i = 0; i < n*m; ++i)
-			if (maze[i] == UNVISITED)
-				unvisidedIndex = i;
-
-		if (unvisidedIndex == -1)
-			break;
-
-		vector<ivec2> neighbours;
-		for (int i = 0; i < 4; ++i) {
-			ivec2 v = cur;
-			switch (i) {
-				case 0: v += ivec2(-2, 0); break;
-				case 1: v += ivec2( 2, 0); break;
-				case 2: v += ivec2( 0,-2); break;
-				case 3: v += ivec2( 0, 2); break;
-			}
-			if (0 <= v.x && v.x < m && 0 <= v.y && v.y < n && maze[v.y*m + v.x] == UNVISITED)
-				neighbours.push_back(v);
-		}
-
-		if (neighbours.size() != 0) {
-			history.push(cur);
-			ivec2 target = neighbours[linearRand(0, (int)neighbours.size()-1)];
-			ivec2 wall = cur + ivec2(-sgn(cur.x-target.x), -sgn(cur.y-target.y));
-			maze[cur.y*m+cur.x] = maze[wall.y*m+wall.x] = maze[target.y*m+target.x] = EMPTY;
-			cur = target;
-		} else if (history.size() != 0) {
-			cur = history.top();
-			history.pop();
-		} else {
-			cur = {unvisidedIndex%n, unvisidedIndex/n};
-		}
-	}
-
-	return maze;
-}
-
-
+#include "maze_generator.cpp"
 
 // код, который выполнится один раз до начала игрового цикла
 void setup() {
@@ -109,22 +15,47 @@ void setup() {
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_BACK);
 
+	mazeMatrix = generate_maze_matrix(MAZE_N, MAZE_M);
+	mazeMesh = make_mesh_from_maze_matrix(mazeMatrix, MAZE_N, MAZE_M);
+	mazeModel = make_model(&mazeMesh);
 
-	Mesh mesh = read_mesh(rootPath+"models\\cube.obj");
-	cube = make_model(&mesh);
+	glEnable(GL_DEPTH_TEST);
 
-	cubePositions = {
-		vec3( 0.0f,  0.0f,  0.0f), 
-		vec3( 2.0f,  5.0f, -15.0f), 
-		vec3(-1.5f, -2.2f, -2.5f),  
-		vec3(-3.8f, -2.0f, -12.3f),  
-		vec3( 2.4f, -0.4f, -3.5f),  
-		vec3(-1.7f,  3.0f, -7.5f),  
-		vec3( 1.3f, -2.0f, -2.5f),  
-		vec3( 1.5f,  2.0f, -2.5f), 
-		vec3( 1.5f,  0.2f, -1.5f), 
-		vec3(-1.3f,  1.0f, -1.5f)  
-	};
+	// return;
+	// system("pause");
+	// return;
+	// maze = generate_maze_model(MAZE_N, MAZE_M);
+	Mesh cubeMesh = read_mesh(rootPath+"models\\cube.obj");
+
+	cube = make_model(&cubeMesh);
+
+	float playerSize = 0.5;
+	Mesh playerMesh = read_mesh(rootPath+"models\\cube.obj");
+	for (int i = 0; i < playerMesh.vertexPositions.size(); ++i){
+		playerMesh.vertexPositions[i] *= playerSize;
+	}
+	playerModel = make_model(&playerMesh);
+
+	int cubeCount = min(MAZE_N, MAZE_M);
+	for (int i = 0; i < cubeCount; ++i) {
+		cubePositions.push_back(vec3(
+			linearRand(0, MAZE_N),
+			linearRand(2, 5),
+			linearRand(-MAZE_M, 0)
+		));
+	}
+	// cubePositions = {
+	// 	vec3( 0.0f,  0.0f,  0.0f), 
+	// 	vec3( 2.0f,  5.0f, -15.0f), 
+	// 	vec3(-1.5f, -2.2f, -2.5f),  
+	// 	vec3(-3.8f, -2.0f, -12.3f),  
+	// 	vec3( 2.4f, -0.4f, -3.5f),  
+	// 	vec3(-1.7f,  3.0f, -7.5f),  
+	// 	vec3( 1.3f, -2.0f, -2.5f),  
+	// 	vec3( 1.5f,  2.0f, -2.5f), 
+	// 	vec3( 1.5f,  0.2f, -1.5f), 
+	// 	vec3(-1.3f,  1.0f, -1.5f)  
+	// };
 
 
 	// компилируем шейдеры
@@ -134,18 +65,21 @@ void setup() {
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
 
 	// грузим текстуры
-	textures.push_back(load_texture_from_file(rootPath+"textures\\harry.jpg"));
-	textures.push_back(load_texture_from_file(rootPath+"textures\\cat.png"));
-	textures.push_back(load_texture_from_file(rootPath+"textures\\mad.jpg"));
-	textures.push_back(load_texture_from_file(rootPath+"textures\\pearl.png"));
+
+	cat = load_texture_from_file(rootPath+"textures\\cat.png");
+	cobblestone = load_texture_from_file(rootPath+"textures\\cobblestone.png");
+	lev = load_texture_from_file(rootPath+"textures\\harry.jpg");
+	// textures.push_back(load_texture_from_file(rootPath+"textures\\mad.jpg"));
+	// textures.push_back(load_texture_from_file(rootPath+"textures\\pearl.png"));
 	// textures.push_back(load_texture_from_file(rootPath+"textures\\grass_side.png"));
-	// textures.push_back(load_texture_from_file(rootPath+"textures\\grass_top.png"));
 	// textures.push_back(load_texture_from_file(rootPath+"textures\\cobblestone.png"));
 
-	modeN = textures.size();
+	// modeN = textures.size();
 
 	// генерируем лабиринт
-	maze = generate_maze_matrix(MAZE_N, MAZE_M);
+	// maze = generate_maze_matrix(MAZE_N, MAZE_M);
+
+
 
 	view = translate(view, vec3(0.0f, 0.0f, -3.0f));
 	projection = perspective(radians(45.0f), (float)frameBufferSize.x/(float)frameBufferSize.y, 0.1f, 100.0f);
@@ -177,6 +111,17 @@ void do_camera_movement() {
 	float speed = cameraSpeed*dt;
 
 	if (input.keys[GLFW_KEY_W])
+		player.position += speed * camera.front;
+	if (input.keys[GLFW_KEY_S])
+		player.position -= speed * camera.front;
+	if (input.keys[GLFW_KEY_A])
+		player.position -= normalize(cross(camera.front, camera.up)) * speed;
+	if (input.keys[GLFW_KEY_D])
+		player.position += normalize(cross(camera.front, camera.up)) * speed;
+	player.position.y = 0;
+	camera.position = player.position + vec3(0,1,0);
+
+	if (input.keys[GLFW_KEY_W])
 		camera.position += speed * camera.front;
 	if (input.keys[GLFW_KEY_S])
 		camera.position -= speed * camera.front;
@@ -194,15 +139,14 @@ void do_camera_movement() {
 // код, который будет выполняться каждый кадр
 void loop() {
 
+	// draw_maze_matrix(mazeMatrix, MAZE_N, MAZE_M);
+	// return;
+
 	do_camera_movement();
 	// очищаем экран
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// draw_maze_matrix(maze);
-
-	mat4 model;
-	model = rotate(model, radians((GLfloat)currentTime*55.0f), vec3(0.5f, 1.0f, 0.0f));
-
 	
 	glUseProgram(shaderPrograms[0]);
 
@@ -213,19 +157,41 @@ void loop() {
 	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "view"),       1, GL_FALSE, value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "projection"), 1, GL_FALSE, value_ptr(projection));
 
-	glBindTexture(GL_TEXTURE_2D, textures[mode-1]);
-	glBindVertexArray(cube.VAO);
-	for(GLuint i = 0; i < 10; i++)
 	{
-		mat4 model;
-		model = translate(model, cubePositions[i]);
-		GLfloat angle = radians((GLfloat)currentTime*20.0f*(i+1));
-		model = rotate(model, angle, vec3(1.0f, 0.3f, 0.5f));
-		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
+		glBindTexture(GL_TEXTURE_2D, cat);
+		glBindVertexArray(cube.VAO);
+		for(GLuint i = 0; i < cubePositions.size(); i++)
+		{
+			mat4 model;
+			model = translate(model, cubePositions[i]);
+			GLfloat angle = radians((GLfloat)currentTime*20.0f*(i+1));
+			model = rotate(model, angle, vec3(1.0f, 0.3f, 0.5f));
+			glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
 
-		glDrawElements(GL_TRIANGLES, cube.indicesCount, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, cube.indicesCount, GL_UNSIGNED_INT, 0);
+		}
+		glBindVertexArray(0);
 	}
-	glBindVertexArray(0);
+
+	{
+		glBindTexture(GL_TEXTURE_2D, cobblestone);
+		glBindVertexArray(mazeModel.VAO);
+		mat4 model;
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
+		glDrawElements(GL_TRIANGLES, mazeModel.indicesCount, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+	}
+
+	{
+		glBindTexture(GL_TEXTURE_2D, lev);
+		glBindVertexArray(playerModel.VAO);
+		mat4 model;
+		model = translate(model, player.position);
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
+		glDrawElements(GL_TRIANGLES, playerModel.indicesCount, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+	}
+
 }
 
 
@@ -246,9 +212,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) //если нажали на ESC
         glfwSetWindowShouldClose(window, GLFW_TRUE); //то окно надо закрыть
     if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
-    	mode += 1;
-    	if (mode > modeN)
-    		mode = 1;
+    	firstPersonMode = !firstPersonMode;
+    	if (firstPersonMode) {
+    		projection = perspective(radians(45.0f), (float)frameBufferSize.x/(float)frameBufferSize.y, 0.1f, 100.0f);
+    	} else {
+    		projection = ortho(0.0f, (float)frameBufferSize.x,(float)frameBufferSize.y,0.0f, 0.1f, 100.0f);
+    	}
     }
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
     	wireframeMode = !wireframeMode;
@@ -349,8 +318,8 @@ int main() {
 		return 1;
 	}
 
+
 	// glViewport(0, 0, resolution.x, resolution.y);
-	glEnable(GL_DEPTH_TEST);
 
 	// цвет очистки экрана - белый
 	// glClearColor(1, 1, 1, 0);

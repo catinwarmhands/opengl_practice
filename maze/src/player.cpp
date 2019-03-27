@@ -3,6 +3,6 @@
 #include "libs.cpp"
 
 struct Player {
-	vec2 position;
-	vec3 orientation;
+	vec3 position;
+	float orientation;
 };

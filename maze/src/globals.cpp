@@ -1,3 +1,5 @@
+#pragma once
+
 #include "libs.cpp"
 
 #include "player.cpp"
@@ -23,22 +25,22 @@ double currentTime  = 0;
 double dt           = 0;
 
 // размеры лабиринта и его матрица
-const int MAZE_N = 51;
-const int MAZE_M = 51;
-int* maze = nullptr;
+const int MAZE_N = 15;
+const int MAZE_M = 15;
+int* mazeMatrix = nullptr;
+Mesh mazeMesh;
+Model mazeModel;
 
 Player player;
+Model playerModel;
 Camera2D camera;
-
 
 
 vector<GLuint> vertexShaders;
 vector<GLuint> fragmentShaders;
 vector<GLuint> shaderPrograms;
 
-int mode  = 1;
-int modeN = 3;
-
+bool firstPersonMode = true;
 vector<GLuint> textures;
 
 bool wireframeMode = false;
@@ -57,3 +59,7 @@ float mouseSensitivity = 0.1f;
 InputState input;
 
 Model cube;
+
+GLuint cobblestone;
+GLuint lev;
+GLuint cat;

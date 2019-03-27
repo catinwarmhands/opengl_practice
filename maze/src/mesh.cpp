@@ -7,7 +7,7 @@ struct Mesh {
 	vector<GLfloat> vertexPositions;
 	vector<GLfloat> textureCoords;
 	vector<GLuint>  indices;
-	vector<GLfloat> vertexNormals;
+	// vector<GLfloat> vertexNormals;
 };
 
 
@@ -41,14 +41,14 @@ Mesh read_mesh(const string& filePath) {
 			mesh.textureCoords.insert(mesh.textureCoords.end(), {uv.x, uv.y});
 		}
 
-		for (int j : {
-			ObjFile.f[i].f0.normal-1,
-			ObjFile.f[i].f1.normal-1,
-			ObjFile.f[i].f2.normal-1,
-		}) {
-			vec3 normal(ObjFile.vn[j].x, ObjFile.vn[j].y, ObjFile.vn[j].z);
-			mesh.vertexNormals.insert(mesh.vertexNormals.end(), {normal.x, normal.y, normal.z});
-		}
+		// for (int j : {
+		// 	ObjFile.f[i].f0.normal-1,
+		// 	ObjFile.f[i].f1.normal-1,
+		// 	ObjFile.f[i].f2.normal-1,
+		// }) {
+		// 	vec3 normal(ObjFile.vn[j].x, ObjFile.vn[j].y, ObjFile.vn[j].z);
+		// 	mesh.vertexNormals.insert(mesh.vertexNormals.end(), {normal.x, normal.y, normal.z});
+		// }
 	}
 	for (int i = 0; i < mesh.vertexPositions.size(); ++i) {
 		mesh.indices.push_back(i);
