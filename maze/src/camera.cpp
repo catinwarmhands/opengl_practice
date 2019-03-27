@@ -8,5 +8,6 @@ struct Camera2D {
 	vec3 up       = vec3(0.0f, 1.0f,  0.0f);
 	float yaw     = 0;
 	float pitch   = 0;
-
+	float fov     = 45;
+	float scale   = 5;
 };

@@ -8,15 +8,15 @@
 
 void set_projection() {
 	if (firstPersonMode) {
-		projection = perspective(radians(45.0f), (float)frameBufferSize.x / (float)frameBufferSize.y, 0.1f, 100.0f);
+		projection = perspective(radians(camera.fov), (float)frameBufferSize.x / (float)frameBufferSize.y, 0.1f, 100.0f);
 	} else {
 		const float aspect = (float)frameBufferSize.y / (float)frameBufferSize.x;
-		const float scale = 5.0;
+		// const float scale = 5.0;
 		projection = ortho(
-			-scale,
-			scale,
-			-scale * aspect,
-			scale * aspect,
+			-camera.scale,
+			camera.scale,
+			-camera.scale * aspect,
+			camera.scale * aspect,
 			0.1f,
 			100.0f
 		);
@@ -46,10 +46,9 @@ void setup() {
 
 	cube = make_model(&cubeMesh);
 
-	float playerSize = 0.5;
 	Mesh playerMesh = read_mesh(rootPath+"models\\cube.obj");
 	for (int i = 0; i < playerMesh.vertexPositions.size(); ++i){
-		playerMesh.vertexPositions[i] *= playerSize;
+		playerMesh.vertexPositions[i] *= player.size;
 	}
 	playerModel = make_model(&playerMesh);
 
@@ -85,6 +84,26 @@ void setup() {
 	camera.yaw = -90;
 }
 
+bool valid_player_position(vec3 pos) {
+	pos.x += player.size/2;
+	pos.z += player.size/2;
+	vec3 size(1, 0.5, 1);
+	vec2 origin = {0, 0};
+	vec2 cur;
+	for (int i = 0; i < MAZE_N; ++i) {
+		cur.y = origin.y - size.z*i;
+		for (int j = 0; j < MAZE_M; ++j) {
+			cur.x = origin.x + size.x*j;
+			int c = mazeMatrix[i*MAZE_M+j];
+			if (c == 1) {
+				if (!(pos.x + player.size < cur.x || pos.x > cur.x + size.x || pos.z + player.size < cur.y || pos.z > cur.y + size.z))
+					return false;
+			}
+		}
+	}
+	return true;
+}
+
 void do_movement() {
 	camera.yaw   += input.cursorOffset.x;
 	camera.pitch += input.cursorOffset.y;
@@ -105,16 +124,21 @@ void do_movement() {
 	float speed = cameraSpeed*dt;
 
 
+	vec3 new_position = player.position;
 	if (firstPersonMode) {
 		if (input.keys[GLFW_KEY_W])
-			player.position += speed * camera.front;
+			new_position += speed * camera.front;
 		if (input.keys[GLFW_KEY_S])
-			player.position -= speed * camera.front;
+			new_position -= speed * camera.front;
 		if (input.keys[GLFW_KEY_A])
-			player.position -= normalize(cross(camera.front, camera.up)) * speed;
+			new_position -= normalize(cross(camera.front, camera.up)) * speed;
 		if (input.keys[GLFW_KEY_D])
-			player.position += normalize(cross(camera.front, camera.up)) * speed;
-		player.position.y = 0;
+			new_position += normalize(cross(camera.front, camera.up)) * speed;
+		new_position.y = 0;
+		// printf("%d\n",valid_player_position(new_position));
+		if (valid_player_position(new_position)) {
+			player.position = new_position;
+		}
 		camera.position = player.position + vec3(0,1,0);
 
 		if (input.keys[GLFW_KEY_W])
@@ -125,21 +149,27 @@ void do_movement() {
 			camera.position -= normalize(cross(camera.front, camera.up)) * speed;
 		if (input.keys[GLFW_KEY_D])
 			camera.position += normalize(cross(camera.front, camera.up)) * speed; 
-		if (input.keys[GLFW_KEY_SPACE])
-			camera.position += speed * camera.up; 
-		if (input.keys[GLFW_KEY_LEFT_CONTROL])
-			camera.position -= speed * camera.up; 
+		// if (input.keys[GLFW_KEY_SPACE])
+		// 	camera.position += speed * camera.up; 
+		// if (input.keys[GLFW_KEY_LEFT_CONTROL])
+		// 	camera.position -= speed * camera.up; 
 
 	} else {
 		if (input.keys[GLFW_KEY_W])
-			player.position.x -= speed;
+			new_position.x -= speed;
 		if (input.keys[GLFW_KEY_S])
-			player.position.x += speed;
+			new_position.x += speed;
 		if (input.keys[GLFW_KEY_A])
-			player.position.z += speed;
+			new_position.z += speed;
 		if (input.keys[GLFW_KEY_D])
-			player.position.z -= speed;
+			new_position.z -= speed;
 
+		new_position.y = 0;
+		// player.position = new_position;
+		// printf("%d\n",valid_player_position(new_position));
+		if (valid_player_position(new_position)) {
+			player.position = new_position;
+		}
 		camera.position = player.position + vec3(0,10,0);
 		camera.yaw = 180;
 		camera.pitch = -90;
@@ -283,6 +313,13 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 	}
 }
 
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+	// if (fov >= 1.0f && fov <= 45.0f)
+	camera.fov -= yoffset;
+	camera.scale -= yoffset;
+	set_projection();
+}
+
 int main() {
 	// узнаем корневую директорию (для доступа к ресурсам)
 	rootPath = get_root_path();
@@ -316,6 +353,7 @@ int main() {
 	glfwSetCursorPosCallback(window, cursor_pos_callback);
 	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
