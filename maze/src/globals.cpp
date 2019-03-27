@@ -40,7 +40,7 @@ vector<GLuint> vertexShaders;
 vector<GLuint> fragmentShaders;
 vector<GLuint> shaderPrograms;
 
-bool firstPersonMode = true;
+bool firstPersonMode = false;
 vector<GLuint> textures;
 
 bool wireframeMode = false;

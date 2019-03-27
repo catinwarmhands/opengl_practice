@@ -6,6 +6,23 @@
 #include "model.cpp"
 #include "maze_generator.cpp"
 
+void set_projection() {
+	if (firstPersonMode) {
+		projection = perspective(radians(45.0f), (float)frameBufferSize.x / (float)frameBufferSize.y, 0.1f, 100.0f);
+	} else {
+		const float aspect = (float)frameBufferSize.y / (float)frameBufferSize.x;
+		const float scale = 5.0;
+		projection = ortho(
+			-scale,
+			scale,
+			-scale * aspect,
+			scale * aspect,
+			0.1f,
+			100.0f
+		);
+	}
+}
+
 // код, который выполнится один раз до начала игрового цикла
 void setup() {
 	// инициализация генератора рандомных чисел
@@ -44,20 +61,7 @@ void setup() {
 			linearRand(-MAZE_M, 0)
 		));
 	}
-	// cubePositions = {
-	// 	vec3( 0.0f,  0.0f,  0.0f), 
-	// 	vec3( 2.0f,  5.0f, -15.0f), 
-	// 	vec3(-1.5f, -2.2f, -2.5f),  
-	// 	vec3(-3.8f, -2.0f, -12.3f),  
-	// 	vec3( 2.4f, -0.4f, -3.5f),  
-	// 	vec3(-1.7f,  3.0f, -7.5f),  
-	// 	vec3( 1.3f, -2.0f, -2.5f),  
-	// 	vec3( 1.5f,  2.0f, -2.5f), 
-	// 	vec3( 1.5f,  0.2f, -1.5f), 
-	// 	vec3(-1.3f,  1.0f, -1.5f)  
-	// };
-
-
+	
 	// компилируем шейдеры
 	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.vert"));
 	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.frag"));
@@ -69,20 +73,10 @@ void setup() {
 	cat = load_texture_from_file(rootPath+"textures\\cat.png");
 	cobblestone = load_texture_from_file(rootPath+"textures\\cobblestone.png");
 	lev = load_texture_from_file(rootPath+"textures\\harry.jpg");
-	// textures.push_back(load_texture_from_file(rootPath+"textures\\mad.jpg"));
-	// textures.push_back(load_texture_from_file(rootPath+"textures\\pearl.png"));
-	// textures.push_back(load_texture_from_file(rootPath+"textures\\grass_side.png"));
-	// textures.push_back(load_texture_from_file(rootPath+"textures\\cobblestone.png"));
-
-	// modeN = textures.size();
-
-	// генерируем лабиринт
-	// maze = generate_maze_matrix(MAZE_N, MAZE_M);
-
 
 
 	view = translate(view, vec3(0.0f, 0.0f, -3.0f));
-	projection = perspective(radians(45.0f), (float)frameBufferSize.x/(float)frameBufferSize.y, 0.1f, 100.0f);
+	set_projection();
 
 	double x, y;
 	glfwGetCursorPos(window, &x, &y);
@@ -91,7 +85,7 @@ void setup() {
 	camera.yaw = -90;
 }
 
-void do_camera_movement() {
+void do_movement() {
 	camera.yaw   += input.cursorOffset.x;
 	camera.pitch += input.cursorOffset.y;
 	input.cursorOffset.x = 0;
@@ -110,29 +104,47 @@ void do_camera_movement() {
 
 	float speed = cameraSpeed*dt;
 
-	if (input.keys[GLFW_KEY_W])
-		player.position += speed * camera.front;
-	if (input.keys[GLFW_KEY_S])
-		player.position -= speed * camera.front;
-	if (input.keys[GLFW_KEY_A])
-		player.position -= normalize(cross(camera.front, camera.up)) * speed;
-	if (input.keys[GLFW_KEY_D])
-		player.position += normalize(cross(camera.front, camera.up)) * speed;
-	player.position.y = 0;
-	camera.position = player.position + vec3(0,1,0);
 
-	if (input.keys[GLFW_KEY_W])
-		camera.position += speed * camera.front;
-	if (input.keys[GLFW_KEY_S])
-		camera.position -= speed * camera.front;
-	if (input.keys[GLFW_KEY_A])
-		camera.position -= normalize(cross(camera.front, camera.up)) * speed;
-	if (input.keys[GLFW_KEY_D])
-		camera.position += normalize(cross(camera.front, camera.up)) * speed; 
-	if (input.keys[GLFW_KEY_SPACE])
-		camera.position += speed * camera.up; 
-	if (input.keys[GLFW_KEY_LEFT_CONTROL])
-		camera.position -= speed * camera.up; 
+	if (firstPersonMode) {
+		if (input.keys[GLFW_KEY_W])
+			player.position += speed * camera.front;
+		if (input.keys[GLFW_KEY_S])
+			player.position -= speed * camera.front;
+		if (input.keys[GLFW_KEY_A])
+			player.position -= normalize(cross(camera.front, camera.up)) * speed;
+		if (input.keys[GLFW_KEY_D])
+			player.position += normalize(cross(camera.front, camera.up)) * speed;
+		player.position.y = 0;
+		camera.position = player.position + vec3(0,1,0);
+
+		if (input.keys[GLFW_KEY_W])
+			camera.position += speed * camera.front;
+		if (input.keys[GLFW_KEY_S])
+			camera.position -= speed * camera.front;
+		if (input.keys[GLFW_KEY_A])
+			camera.position -= normalize(cross(camera.front, camera.up)) * speed;
+		if (input.keys[GLFW_KEY_D])
+			camera.position += normalize(cross(camera.front, camera.up)) * speed; 
+		if (input.keys[GLFW_KEY_SPACE])
+			camera.position += speed * camera.up; 
+		if (input.keys[GLFW_KEY_LEFT_CONTROL])
+			camera.position -= speed * camera.up; 
+
+	} else {
+		if (input.keys[GLFW_KEY_W])
+			player.position.x -= speed;
+		if (input.keys[GLFW_KEY_S])
+			player.position.x += speed;
+		if (input.keys[GLFW_KEY_A])
+			player.position.z += speed;
+		if (input.keys[GLFW_KEY_D])
+			player.position.z -= speed;
+
+		camera.position = player.position + vec3(0,10,0);
+		camera.yaw = 180;
+		camera.pitch = -90;
+	}
+
 }
 
 
@@ -142,7 +154,7 @@ void loop() {
 	// draw_maze_matrix(mazeMatrix, MAZE_N, MAZE_M);
 	// return;
 
-	do_camera_movement();
+	do_movement();
 	// очищаем экран
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -182,11 +194,12 @@ void loop() {
 		glBindVertexArray(0);
 	}
 
-	{
+	if (!firstPersonMode) {
 		glBindTexture(GL_TEXTURE_2D, lev);
 		glBindVertexArray(playerModel.VAO);
 		mat4 model;
 		model = translate(model, player.position);
+		model = rotate(model, radians(player.orientation), vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
 		glDrawElements(GL_TRIANGLES, playerModel.indicesCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
@@ -213,11 +226,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, GLFW_TRUE); //то окно надо закрыть
     if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
     	firstPersonMode = !firstPersonMode;
-    	if (firstPersonMode) {
-    		projection = perspective(radians(45.0f), (float)frameBufferSize.x/(float)frameBufferSize.y, 0.1f, 100.0f);
-    	} else {
-    		projection = ortho(0.0f, (float)frameBufferSize.x,(float)frameBufferSize.y,0.0f, 0.1f, 100.0f);
-    	}
+    	set_projection();
     }
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
     	wireframeMode = !wireframeMode;
@@ -261,15 +270,17 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	frameBufferSize.x = width;
 	frameBufferSize.y = height;
-	projection = perspective(radians(45.0f), (float)frameBufferSize.x/(float)frameBufferSize.y, 0.1f, 100.0f);
+	set_projection();
     glViewport(0, 0, width, height);
 }
 
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
-	input.cursorOffset.x = (x - input.cursorPosition.x)*mouseSensitivity;
-	input.cursorOffset.y = (input.cursorPosition.y - y)*mouseSensitivity;
-	input.cursorPosition.x = x;
-	input.cursorPosition.y = y;
+	if (firstPersonMode) {
+		input.cursorOffset.x = (x - input.cursorPosition.x)*mouseSensitivity;
+		input.cursorOffset.y = (input.cursorPosition.y - y)*mouseSensitivity;
+		input.cursorPosition.x = x;
+		input.cursorPosition.y = y;
+	}
 }
 
 int main() {

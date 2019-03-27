@@ -4,5 +4,5 @@
 
 struct Player {
 	vec3 position;
-	float orientation;
+	float orientation = -90;
 };
