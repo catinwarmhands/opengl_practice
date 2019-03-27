@@ -50,6 +50,7 @@ mkdir release
 xcopy /e/i/y bin release\bin
 xcopy /e/i/y textures release\textures
 xcopy /e/i/y shaders release\shaders
+xcopy /e/i/y models release\models
 
 if not ERRORLEVEL == 0 (
 	call cleanup
