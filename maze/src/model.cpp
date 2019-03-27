@@ -15,6 +15,8 @@ GLuint make_VBO(const vector<GLfloat>& bufferData, GLuint index, GLuint dimensio
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, bufferData.size()*sizeof(GLfloat), bufferData.data(), GL_STATIC_DRAW);
+
+	// TODO bind VAO
 	glVertexAttribPointer(index, dimensions, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
 	glEnableVertexAttribArray(index);
 	return VBO;

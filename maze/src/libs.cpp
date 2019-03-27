@@ -2,6 +2,8 @@
 
 // стандартные библиотеки
 #include <iostream> //cout, endl
+#include <fstream> //istringstream
+#include <sstream> //istringstream
 #include <cmath> //sin, cos
 #include <string>
 #include <stack>
@@ -30,6 +32,19 @@ using namespace glm;
 #endif
 #define STB_IMAGE_IMPLEMENTATION
 #include "../libs/stb/stb_image.h"
+#ifdef __clang__
+	#pragma clang diagnostic pop
+#endif
+
+// OBJ_loader
+
+#ifdef __clang__
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wwritable-strings"
+	#pragma clang diagnostic ignored "-Wunused-value"
+#endif
+#define OBJL_IMPLEMENTATION
+#include "../libs/OBJLoader/obj_loader.h"
 #ifdef __clang__
 	#pragma clang diagnostic pop
 #endif

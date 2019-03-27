@@ -2,22 +2,6 @@
 
 #include "libs.cpp"
 
-// имена стандартных стипов
-#include <cstdint>
-using u8  = uint8_t;
-using u16 = uint16_t;
-using u32 = uint32_t;
-using u64 = uint64_t;
-using s8  = int8_t;
-using s16 = int16_t;
-using s32 = int32_t;
-using s64 = int64_t;
-using byte = u8;
-using float32 = float;
-using float64 = double;
-using f32 = float32;
-using f64 = float64;
-
 // знак числа {-1, 0, 1}
 template <typename T>
 int sgn(T val) {
@@ -25,7 +9,7 @@ int sgn(T val) {
 }
 
 // вывести значение переменной иеё название на экран (для дебага)
-#define varprint(x) std::cout << #x << " = " << (x) << std::endl
+#define varprint(x) cout << #x << " = " << (x) << endl
 
 // заканчивается строка другой строкой
 bool ends_with(const string& s1, const string& s2) {
@@ -60,6 +44,35 @@ string read_file(const string& filePath) {
 	return result;
 }
 
+
+vector<string> split_string(const string& str, const string& delimiters) {
+	size_t start = 0;
+	size_t end = str.find_first_of(delimiters);
+	vector<string> result;
+	while (end <= string::npos) {
+		string token = str.substr(start, end - start);
+		if (!token.empty())
+			result.push_back(token);
+		if (end == string::npos)
+			break;
+		start = end + 1;
+		end = str.find_first_of(delimiters, start);
+	}
+	return result;
+}
+
+vector<string> split_string(const string& str, const char delimiter) {
+	return split_string(str, string(1, delimiter));
+}
+
+vector<string> tokenize_string(const string& str) {
+	return split_string(str, " \t\n");
+}
+
+vector<string> GetLines(const string& str) {
+	return split_string(str, "\n");
+}
+
 // узнать, в какой папке лежит проект
 string get_root_path() 
 {
@@ -81,4 +94,18 @@ string get_root_path()
 	#else
 		#error [root_path] only works on windows for now...
 	#endif
+}
+
+template<class T>
+string to_string(const vector<T>& vec) {
+	int n = vec.size();
+	std::ostringstream oss;
+	oss << "{";
+	for (int i = 0; i < n; ++i) {
+		oss << vec[i];
+		if (i != n-1)
+			oss << ", ";
+	}
+	oss << "}";
+	return oss.str();
 }
