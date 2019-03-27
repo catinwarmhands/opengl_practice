@@ -95,7 +95,7 @@ bool valid_player_position(vec3 pos) {
 		for (int j = 0; j < MAZE_M; ++j) {
 			cur.x = origin.x + size.x*j;
 			int c = mazeMatrix[i*MAZE_M+j];
-			if (c == 1) {
+			if (c == 1 && distance({pos.x, pos.z}, cur) <= 4.0f) {
 				if (!(pos.x + player.size < cur.x || pos.x > cur.x + size.x || pos.z + player.size < cur.y || pos.z > cur.y + size.z))
 					return false;
 			}
@@ -135,20 +135,19 @@ void do_movement() {
 		if (input.keys[GLFW_KEY_D])
 			new_position += normalize(cross(camera.front, camera.up)) * speed;
 		new_position.y = 0;
-		// printf("%d\n",valid_player_position(new_position));
 		if (valid_player_position(new_position)) {
 			player.position = new_position;
 		}
-		camera.position = player.position + vec3(0,1,0);
+		camera.position = player.position - 3.0f*camera.front+vec3(0,0.7,0);
 
-		if (input.keys[GLFW_KEY_W])
-			camera.position += speed * camera.front;
-		if (input.keys[GLFW_KEY_S])
-			camera.position -= speed * camera.front;
-		if (input.keys[GLFW_KEY_A])
-			camera.position -= normalize(cross(camera.front, camera.up)) * speed;
-		if (input.keys[GLFW_KEY_D])
-			camera.position += normalize(cross(camera.front, camera.up)) * speed; 
+		// if (input.keys[GLFW_KEY_W])
+		// 	camera.position += speed * camera.front;
+		// if (input.keys[GLFW_KEY_S])
+		// 	camera.position -= speed * camera.front;
+		// if (input.keys[GLFW_KEY_A])
+		// 	camera.position -= normalize(cross(camera.front, camera.up)) * speed;
+		// if (input.keys[GLFW_KEY_D])
+		// 	camera.position += normalize(cross(camera.front, camera.up)) * speed; 
 		// if (input.keys[GLFW_KEY_SPACE])
 		// 	camera.position += speed * camera.up; 
 		// if (input.keys[GLFW_KEY_LEFT_CONTROL])
@@ -165,8 +164,6 @@ void do_movement() {
 			new_position.z -= speed;
 
 		new_position.y = 0;
-		// player.position = new_position;
-		// printf("%d\n",valid_player_position(new_position));
 		if (valid_player_position(new_position)) {
 			player.position = new_position;
 		}
@@ -224,7 +221,8 @@ void loop() {
 		glBindVertexArray(0);
 	}
 
-	if (!firstPersonMode) {
+	// if (!firstPersonMode)
+	{
 		glBindTexture(GL_TEXTURE_2D, lev);
 		glBindVertexArray(playerModel.VAO);
 		mat4 model;

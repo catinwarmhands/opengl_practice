@@ -25,8 +25,8 @@ double currentTime  = 0;
 double dt           = 0;
 
 // размеры лабиринта и его матрица
-const int MAZE_N = 15;
-const int MAZE_M = 15;
+const int MAZE_N = 25;
+const int MAZE_M = 25;
 int* mazeMatrix = nullptr;
 Mesh mazeMesh;
 Model mazeModel;
@@ -35,13 +35,12 @@ Player player;
 Model playerModel;
 Camera2D camera;
 
-
 vector<GLuint> vertexShaders;
 vector<GLuint> fragmentShaders;
 vector<GLuint> shaderPrograms;
-
-bool firstPersonMode = false;
 vector<GLuint> textures;
+
+bool firstPersonMode = true;
 
 bool wireframeMode = false;
 bool mouseLock = true;
@@ -63,4 +62,3 @@ Model cube;
 GLuint cobblestone;
 GLuint lev;
 GLuint cat;
-

@@ -151,7 +151,7 @@ int* generate_maze_matrix(int n, int m) {
 
 Mesh make_mesh_from_maze_matrix(int* mazeMatrix, int n, int m) {
 	Mesh mesh;
-	vec3 size(1, 0.5, 1);
+	vec3 size = {1, 1, 1};
 	vec2 origin = {0, 0};
 	vec2 cur;
 	int k = 0;
@@ -161,43 +161,44 @@ Mesh make_mesh_from_maze_matrix(int* mazeMatrix, int n, int m) {
 			cur.x = origin.x + size.x*j;
 			int c = mazeMatrix[i*m+j];
 			if (c == 1) {
+				vec2 offset = {cur.x*size.x, cur.y*size.z};
 				mesh.vertexPositions.insert(mesh.vertexPositions.end(), {
-					-0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y, -0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x,  0.5f*size.y, -0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x, -0.5f*size.y,  0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x, -0.5f*size.y,  0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x, -0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x,  0.5f*size.y, -0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x, -0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x, -0.5f*size.y,  0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x, -0.5f*size.y,  0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x, -0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x, -0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x, -0.5f*size.y, -0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x,  0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y, -0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					 0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x,  0.5f*size.y,  0.5f+cur.y*size.z,
-					-0.5f+cur.x*size.x,  0.5f*size.y, -0.5f+cur.y*size.z
+					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
+					-0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
+					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					-0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
+					 0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
+					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					-0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
+					 0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					-0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					-0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y
 				});
 				// GLuint indicesCount = mesh.indices.size();
 				// mesh.indices.insert(mesh.indices.end(), {
