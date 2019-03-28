@@ -15,6 +15,12 @@ void set_projection() {
 	}
 }
 
+void set_score_message() {
+	ostringstream oss;
+	oss << "Монеты: " << score << "/" << coinsPositions.size();
+	scoreMessage = oss.str();
+}
+
 // код, который выполнится один раз до начала игрового цикла
 void setup() {
 	// инициализация генератора рандомных чисел
@@ -24,11 +30,13 @@ void setup() {
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_BACK);
 
-	mazeMatrix = generate_maze_matrix(MAZE_N, MAZE_M);
-	mazeMesh = make_mesh_from_maze_matrix(mazeMatrix, MAZE_N, MAZE_M);
-	mazeModel = make_model(&mazeMesh);
+	mazeSize = {linearRand(11, 31), linearRand(11, 31)};
+	mazeSize.x = mazeSize.x + (1-mazeSize.x%2);
+	mazeSize.y = mazeSize.y + (1-mazeSize.y%2);
 
-	glEnable(GL_DEPTH_TEST);
+	mazeMatrix = generate_maze_matrix(mazeSize.x, mazeSize.y);
+	mazeMesh = make_mesh_from_maze_matrix(mazeMatrix, mazeSize.x, mazeSize.y);
+	mazeModel = make_model(&mazeMesh);
 
 
 	Mesh cubeMesh = read_mesh(rootPath+"models\\cube.obj");
@@ -40,12 +48,12 @@ void setup() {
 	}
 	playerModel = make_model(&playerMesh);
 
-	int cubeCount = min(MAZE_N, MAZE_M);
+	int cubeCount = min(mazeSize.x, mazeSize.y);
 	for (int i = 0; i < cubeCount; ++i) {
 		cubesPositions.push_back(vec3(
-			linearRand(0, MAZE_M),
+			linearRand(0, mazeSize.y),
 			linearRand(2, 5),
-			linearRand(-MAZE_N, 0)
+			linearRand(-mazeSize.x, 0)
 		));
 	}
 
@@ -54,9 +62,9 @@ void setup() {
 		coinMesh.vertexPositions[i] *= 2;
 	}
 	coinModel = make_model(&coinMesh);
-	coinsPositions = get_coins_positions_from_maze_matrix(mazeMatrix, MAZE_N, MAZE_M);
+	coinsPositions = get_coins_positions_from_maze_matrix(mazeMatrix, mazeSize.x, mazeSize.y);
 
-	groundMesh = generate_ground_mesh(MAZE_N, MAZE_M);
+	groundMesh = generate_ground_mesh(mazeSize.x, mazeSize.y);
 	groundModel = make_model(&groundMesh);
 	
 	// компилируем шейдеры
@@ -83,26 +91,56 @@ void setup() {
 	input.cursorPosition = {x,y};
 
 	camera.yaw = -90;
+
+	fs = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT);
+	if (fs == NULL) {
+		printf("Could not create stash.\n");
+		exit(0);
+	}
+
+	// Add font to stash.
+	fontNormal = fonsAddFont(fs, "sans", (rootPath+"fonts\\DroidSerif-Regular.ttf").c_str());
+	if (fontNormal == FONS_INVALID) {
+		printf("Could not add font normal.\n");
+		exit(0);
+	}
+
+	score = 0;
+	set_score_message();
 }
 
-bool valid_player_position(vec3 pos) {
+bool check_player_collision(vec3 pos) {
 	pos.x += player.size/2;
 	pos.z += player.size/2;
 	vec3 size(1, 0.5, 1);
 	vec2 origin = {0, 0};
 	vec2 cur;
-	for (int i = 0; i < MAZE_N; ++i) {
+	for (int i = 0; i < mazeSize.x; ++i) {
 		cur.y = origin.y - size.z*i;
-		for (int j = 0; j < MAZE_M; ++j) {
+		for (int j = 0; j < mazeSize.y; ++j) {
 			cur.x = origin.x + size.x*j;
-			int c = mazeMatrix[i*MAZE_M+j];
+			int c = mazeMatrix[i*mazeSize.y+j];
 			if (c == 1 && distance({pos.x, pos.z}, cur) <= 4.0f) {
 				if (!(pos.x + player.size < cur.x || pos.x > cur.x + size.x || pos.z + player.size < cur.y || pos.z > cur.y + size.z))
-					return false;
+					return true;
 			}
 		}
 	}
-	return true;
+	return false;
+}
+
+vec3 do_player_collision(vec3 pos) {
+	if (!check_player_collision(pos))
+		return pos;
+
+	vec3 t = {player.position.x, pos.y, pos.z};
+	if (!check_player_collision(t))
+		return t;
+
+	t = {pos.x, pos.y, player.position.z};
+	if (!check_player_collision(t))
+		return t;
+	return player.position;
 }
 
 void do_movement() {
@@ -128,17 +166,15 @@ void do_movement() {
 	vec3 new_position = player.position;
 	if (firstPersonMode) {
 		if (input.keys[GLFW_KEY_W])
-			new_position += speed * camera.front;
+			new_position -= speed * normalize(cross(cross(camera.front, camera.up), camera.up));
 		if (input.keys[GLFW_KEY_S])
-			new_position -= speed * camera.front;
+			new_position += speed * normalize(cross(cross(camera.front, camera.up), camera.up));
 		if (input.keys[GLFW_KEY_A])
 			new_position -= normalize(cross(camera.front, camera.up)) * speed;
 		if (input.keys[GLFW_KEY_D])
 			new_position += normalize(cross(camera.front, camera.up)) * speed;
 		new_position.y = -player.size/2;
-		if (valid_player_position(new_position)) {
-			player.position = new_position;
-		}
+		player.position = do_player_collision(new_position);
 		camera.position = player.position - 3.0f*camera.front+vec3(0,0.7,0);
 
 		// if (input.keys[GLFW_KEY_W])
@@ -165,47 +201,81 @@ void do_movement() {
 			new_position.z -= speed;
 
 		new_position.y = -player.size/2;
-		if (valid_player_position(new_position)) {
-			player.position = new_position;
-		}
+		player.position = do_player_collision(new_position);
 		camera.position = player.position + vec3(0,10,0);
 		camera.yaw = 180;
 		camera.pitch = -90;
 	}
 }
 
+void render_text() {
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_TEXTURE_2D);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0,frameBufferSize.x,frameBufferSize.y,0,-1,1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glDisable(GL_DEPTH_TEST);
+	glColor4ub(255,255,255,255);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+
+	fonsClearState(fs);
+
+	if (isWin) {
+		fonsSetFont(fs, fontNormal);
+		fonsSetSize(fs, 124.0f);
+		fonsSetColor(fs, white);
+		fonsSetAlign(fs, FONS_ALIGN_CENTER | FONS_ALIGN_MIDDLE);
+		fonsDrawText(fs, frameBufferSize.x/2, frameBufferSize.y/2,"Победа", NULL);
+	}
+
+	fonsSetSize(fs, 36.0f);
+	fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
+
+	float dx = 10, dy = 10;
+	fonsDrawText(fs, dx, dy, scoreMessage.c_str(), NULL);
+
+	glEnable(GL_DEPTH_TEST);
+}
+
+
+
+void check_coins() {
+	for (int i = 0; i < coinsPositions.size(); ++i) {
+		if (distance(player.position, coinsPositions[i]) < player.size) {
+			coinsPositions[i] = {0,-100,0};
+			++score;
+			set_score_message();
+		}
+	}
+}
 
 // код, который будет выполняться каждый кадр
 void loop() {
-
-	// draw_maze_matrix(mazeMatrix, MAZE_N, MAZE_M);
-	// return;
-
-	do_movement();
-	// очищаем экран
+	// // очищаем экран
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// draw_maze_matrix(maze);
-	
+	do_movement();
+	check_coins();
+	if (score >= coinsPositions.size())
+		isWin = true;
 
-	// GLfloat radius = 10.0f;
 	mat4 view;
 	view = lookAt(camera.position, camera.position + camera.front, camera.up);
 
 
 	currentShader = shaderPrograms[0];
 	glUseProgram(currentShader);
-	// for (int i = 0; i < shaderPrograms.size(); ++i) {
-	// 	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[i], "view"),       1, GL_FALSE, value_ptr(view));
-	// 	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[i], "projection"), 1, GL_FALSE, value_ptr(projection));
-	// 	glUniform1f(glGetUniformLocation(shaderPrograms[i], "time"), (GLfloat)currentTime);
-	// }
 
 	glUniformMatrix4fv(glGetUniformLocation(currentShader, "view"),       1, GL_FALSE, value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(currentShader, "projection"), 1, GL_FALSE, value_ptr(projection));
 	glUniform1f(       glGetUniformLocation(currentShader, "time"), (GLfloat)currentTime);
 
 
+	glEnable(GL_DEPTH_TEST);
 	//cubes
 	{
 		glBindTexture(GL_TEXTURE_2D, cat);
@@ -289,7 +359,9 @@ void loop() {
 		glDrawElements(GL_TRIANGLES, playerModel.indicesCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}
+	glUseProgram(0);
 
+	render_text();
 }
 
 

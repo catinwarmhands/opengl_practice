@@ -109,3 +109,10 @@ string to_string(const vector<T>& vec) {
 	oss << "}";
 	return oss.str();
 }
+
+template<class T>
+string to_string(const T& x) {
+	std::ostringstream oss;
+	oss << x;
+	return oss.str();
+}

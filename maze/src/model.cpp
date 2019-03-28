@@ -19,6 +19,7 @@ GLuint make_VBO(const vector<GLfloat>& bufferData, GLuint index, GLuint dimensio
 	// TODO bind VAO
 	glVertexAttribPointer(index, dimensions, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
 	glEnableVertexAttribArray(index);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	return VBO;
 }
 
@@ -27,6 +28,7 @@ GLuint make_EBO(const vector<GLuint>& indices) {
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	return EBO;
 }
 
@@ -47,6 +49,8 @@ Model make_model(Mesh *mesh) {
 	};
 
 	model.EBO = make_EBO(mesh->indices);
+
+	glBindVertexArray(0);
 	return model;
 }
 

@@ -46,3 +46,18 @@ using namespace glm;
 #ifdef __clang__
 	#pragma clang diagnostic pop
 #endif
+
+// fontstash
+#ifdef __clang__
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+#define FONTSTASH_IMPLEMENTATION
+#include "../libs/fontstash/src/fontstash.h"
+#define GLFONTSTASH_IMPLEMENTATION	
+#include "../libs/fontstash/src/glfontstash.h"
+
+#ifdef __clang__
+	#pragma clang diagnostic pop
+#endif

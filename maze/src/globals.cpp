@@ -25,8 +25,7 @@ double currentTime  = 0;
 double dt           = 0;
 
 // размеры лабиринта и его матрица
-const int MAZE_N = 25;
-const int MAZE_M = 15;
+ivec2 mazeSize;
 int* mazeMatrix = nullptr;
 Mesh mazeMesh;
 Model mazeModel;
@@ -50,6 +49,8 @@ vector<GLuint> shaderPrograms;
 vector<GLuint> textures;
 GLuint currentShader;
 
+int score;
+bool isWin = false;
 bool firstPersonMode = true;
 
 bool wireframeMode = false;
@@ -72,3 +73,10 @@ GLuint grass;
 GLuint lev;
 GLuint cat;
 GLuint coin;
+
+
+FONScontext* fs = NULL;
+int fontNormal = FONS_INVALID;
+unsigned int white = glfonsRGBA(255,255,255,255);
+
+string scoreMessage = "kek";
