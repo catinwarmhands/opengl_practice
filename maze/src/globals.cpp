@@ -49,10 +49,13 @@ vector<GLuint> shaderPrograms;
 vector<GLuint> textures;
 GLuint currentShader;
 
-int score;
+int score = 0;
+double bestTime = -1;
+double winTime = -1;
 bool isWin = false;
-bool firstPersonMode = true;
 
+bool noclipMode = false;
+bool firstPersonMode = true;
 bool wireframeMode = false;
 bool mouseLock = true;
 bool fullScreen = false;
@@ -78,5 +81,8 @@ GLuint coin;
 FONScontext* fs = NULL;
 int fontNormal = FONS_INVALID;
 unsigned int white = glfonsRGBA(255,255,255,255);
+unsigned int red   = glfonsRGBA(255,0,0,255);
 
-string scoreMessage = "kek";
+string scoreMessage;
+string timeMessage;
+string bestTimeMessage;

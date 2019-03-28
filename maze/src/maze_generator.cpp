@@ -3,7 +3,7 @@
 #include "libs.cpp"
 #include "mesh.cpp"
 #include "model.cpp"
-#include "globals.cpp"
+// #include "globals.cpp"
 
 void draw_maze_matrix(int* mazeMatrix, int n, int m) {
 	const float size = 2.0f/n;
@@ -40,7 +40,8 @@ enum MazeCellType {
 	UNVISITED = -1,
 	EMPTY     =  0,
 	WALL      =  1,
-	COIN      =  2
+	COIN      =  2,
+	PLAYER    =  3
 };
 
 int* generate_maze_matrix(int n, int m) {
@@ -147,7 +148,6 @@ int* generate_maze_matrix(int n, int m) {
 	}
 
 	int coinsCount = max(n, m);
-
 	for (int i = 0; i < coinsCount; ++i) {
 		cur = {linearRand(1, m-2), linearRand(1, n-2)};
 		if (maze[cur.y*m + cur.x] != EMPTY) {
@@ -155,6 +155,14 @@ int* generate_maze_matrix(int n, int m) {
 			continue;
 		}
 		maze[cur.y*m + cur.x] = COIN;
+	}
+
+	while (true) {
+		cur = {linearRand(1, m-2), linearRand(1, n-2)};
+		if (maze[cur.y*m + cur.x] == EMPTY) {
+			maze[cur.y*m + cur.x] = PLAYER;
+			break;
+		}
 	}
 
 	return maze;
@@ -330,4 +338,29 @@ vector<vec3> get_coins_positions_from_maze_matrix(int* mazeMatrix, int n, int m)
 		}
 	}
 	return result;
+}
+
+vec3 get_player_position_from_maze_matrix(int* mazeMatrix, int n, int m) {
+	int nm = n*m;
+	for (int i = 0; i < nm; ++i) {
+		if (mazeMatrix[i] == PLAYER) {
+			int x = i % m;
+			int z = i / m;
+			return {x, 0, -z};
+		}
+	}
+	return {-1, 0, -1};
+}
+
+vector<vec3> generate_cubes_positions(int n, int m) {
+	int cubeCount = min(n, m);
+	vector<vec3> cubesPositions;
+	for (int i = 0; i < cubeCount; ++i) {
+		cubesPositions.push_back(vec3(
+			linearRand(0, m),
+			linearRand(3, 6),
+			linearRand(-n, 0)
+		));
+	}
+	return cubesPositions;
 }

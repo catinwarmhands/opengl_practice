@@ -2,7 +2,7 @@
 
 // стандартные библиотеки
 #include <iostream> //cout, endl
-#include <fstream> //istringstream
+#include <iomanip> //fixed
 #include <sstream> //istringstream
 #include <cmath> //sin, cos
 #include <string>
