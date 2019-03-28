@@ -36,15 +36,13 @@ using namespace glm;
 	#pragma clang diagnostic pop
 #endif
 
-// OBJ_loader
-
+// tinyobjloader
 #ifdef __clang__
 	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wwritable-strings"
-	#pragma clang diagnostic ignored "-Wunused-value"
+	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
-#define OBJL_IMPLEMENTATION
-#include "../libs/OBJLoader/obj_loader.h"
+#include "../libs/tinyobjloader/tiny_obj_loader.h"
+#include "../libs/tinyobjloader/tiny_obj_loader.cc"
 #ifdef __clang__
 	#pragma clang diagnostic pop
 #endif

@@ -35,6 +35,10 @@ Mesh groundMesh;
 Model groundModel;
 
 Model cubeModel;
+vector<vec3> cubesPositions;
+
+Model coinModel;
+vector<vec3> coinsPositions;
 
 Player player;
 Model playerModel;
@@ -44,6 +48,7 @@ vector<GLuint> vertexShaders;
 vector<GLuint> fragmentShaders;
 vector<GLuint> shaderPrograms;
 vector<GLuint> textures;
+GLuint currentShader;
 
 bool firstPersonMode = true;
 
@@ -55,7 +60,6 @@ bool fullScreen = false;
 mat4 view;
 mat4 projection;
 
-vector<vec3> cubePositions;
 
 float cameraSpeed = 5.0f;
 float mouseSensitivity = 0.1f;
@@ -67,3 +71,4 @@ GLuint cobblestone;
 GLuint grass;
 GLuint lev;
 GLuint cat;
+GLuint noise;

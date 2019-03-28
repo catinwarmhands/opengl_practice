@@ -34,34 +34,44 @@ void setup() {
 	Mesh cubeMesh = read_mesh(rootPath+"models\\cube.obj");
 	cubeModel = make_model(&cubeMesh);
 
-	Mesh playerMesh = read_mesh(rootPath+"models\\cube.obj");
-	for (int i = 0; i < playerMesh.vertexPositions.size(); ++i){
-		playerMesh.vertexPositions[i] *= player.size;
-	}
+	// Mesh playerMesh = read_mesh(rootPath+"models\\cube.obj");
+	Mesh playerMesh = read_mesh(rootPath+"models\\coin.obj");
+	// for (int i = 0; i < playerMesh.vertexPositions.size(); ++i){
+	// 	playerMesh.vertexPositions[i] *= player.size;
+	// }
 	playerModel = make_model(&playerMesh);
 
 	int cubeCount = min(MAZE_N, MAZE_M);
 	for (int i = 0; i < cubeCount; ++i) {
-		cubePositions.push_back(vec3(
+		cubesPositions.push_back(vec3(
 			linearRand(0, MAZE_M),
 			linearRand(2, 5),
 			linearRand(-MAZE_N, 0)
 		));
 	}
 
+	coinModel = make_model(&cubeMesh);
+	coinsPositions = get_coins_positions_from_maze_matrix(mazeMatrix, MAZE_N, MAZE_M);
+
 	groundMesh = generate_ground_mesh(MAZE_N, MAZE_M);
 	groundModel = make_model(&groundMesh);
 	
 	// компилируем шейдеры
 	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.vert"));
+	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\wavy.vert"));
 	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.frag"));
+	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\gold.frag"));
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[1], fragmentShaders[0]));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[1]));
+	currentShader = shaderPrograms[0];
 
 	// грузим текстуры
 	cat = load_texture_from_file(rootPath+"textures\\cat.png");
 	grass = load_texture_from_file(rootPath+"textures\\grass.png");
 	cobblestone = load_texture_from_file(rootPath+"textures\\cobblestone.png", GL_REPEAT, GL_REPEAT);
-	lev = load_texture_from_file(rootPath+"textures\\harry.jpg");
+	lev = load_texture_from_file(rootPath+"textures\\lev.jpg");
+	noise = load_texture_from_file(rootPath+"textures\\noise.png");
 
 	set_projection();
 
@@ -159,7 +169,6 @@ void do_movement() {
 		camera.yaw = 180;
 		camera.pitch = -90;
 	}
-
 }
 
 
@@ -175,49 +184,97 @@ void loop() {
 
 	// draw_maze_matrix(maze);
 	
-	glUseProgram(shaderPrograms[0]);
 
 	// GLfloat radius = 10.0f;
 	mat4 view;
 	view = lookAt(camera.position, camera.position + camera.front, camera.up);
 
-	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "view"),       1, GL_FALSE, value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "projection"), 1, GL_FALSE, value_ptr(projection));
 
+	currentShader = shaderPrograms[0];
+	glUseProgram(currentShader);
+	// for (int i = 0; i < shaderPrograms.size(); ++i) {
+	// 	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[i], "view"),       1, GL_FALSE, value_ptr(view));
+	// 	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[i], "projection"), 1, GL_FALSE, value_ptr(projection));
+	// 	glUniform1f(glGetUniformLocation(shaderPrograms[i], "time"), (GLfloat)currentTime);
+	// }
+
+	glUniformMatrix4fv(glGetUniformLocation(currentShader, "view"),       1, GL_FALSE, value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(currentShader, "projection"), 1, GL_FALSE, value_ptr(projection));
+	glUniform1f(       glGetUniformLocation(currentShader, "time"), (GLfloat)currentTime);
+
+
+	//cubes
 	{
 		glBindTexture(GL_TEXTURE_2D, cat);
 		glBindVertexArray(cubeModel.VAO);
-		for(GLuint i = 0; i < cubePositions.size(); i++)
+		for(GLuint i = 0; i < cubesPositions.size(); i++)
 		{
 			mat4 model;
-			model = translate(model, cubePositions[i]);
+			model = translate(model, cubesPositions[i]);
 			GLfloat angle = radians((GLfloat)currentTime*20.0f*(i+1));
 			model = rotate(model, angle, vec3(1.0f, 0.3f, 0.5f));
-			glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"), 1, GL_FALSE, value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(currentShader, "model"), 1, GL_FALSE, value_ptr(model));
 
 			glDrawElements(GL_TRIANGLES, cubeModel.indicesCount, GL_UNSIGNED_INT, 0);
 		}
 		glBindVertexArray(0);
 	}
 
+	// ground
 	{
 		glBindTexture(GL_TEXTURE_2D, cobblestone);
 		glBindVertexArray(groundModel.VAO);
 		mat4 model;
-		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"), 1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(currentShader, "model"), 1, GL_FALSE, value_ptr(model));
 		glDrawElements(GL_TRIANGLES, groundModel.indicesCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}
 
+	// maze
 	{
+		currentShader = shaderPrograms[1];
+		glUseProgram(currentShader);
 		glBindTexture(GL_TEXTURE_2D, grass);
 		glBindVertexArray(mazeModel.VAO);
 		mat4 model;
-		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"), 1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(currentShader, "model"), 1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(currentShader, "view"),       1, GL_FALSE, value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(currentShader, "projection"), 1, GL_FALSE, value_ptr(projection));
+		glUniform1f(       glGetUniformLocation(currentShader, "time"), (GLfloat)currentTime);
+
 		glDrawElements(GL_TRIANGLES, mazeModel.indicesCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
+		currentShader = shaderPrograms[0];
+		glUseProgram(currentShader);
 	}
 
+	// coins
+	{
+		currentShader = shaderPrograms[0];
+		glUseProgram(currentShader);
+		glBindTexture(GL_TEXTURE_2D, noise);
+		glBindVertexArray(coinModel.VAO);
+		glUniformMatrix4fv(glGetUniformLocation(currentShader, "view"),       1, GL_FALSE, value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(currentShader, "projection"), 1, GL_FALSE, value_ptr(projection));
+		glUniform1f(       glGetUniformLocation(currentShader, "time"), (GLfloat)currentTime);
+		for(GLuint i = 0; i < coinsPositions.size(); i++)
+		{
+			mat4 model;
+			model = translate(model, coinsPositions[i]);
+			// GLfloat angle = radians((GLfloat)currentTime*20.0f*(i+1));
+			// model = rotate(model, angle, vec3(1.0f, 0.3f, 0.5f));
+			glUniformMatrix4fv(glGetUniformLocation(currentShader, "model"), 1, GL_FALSE, value_ptr(model));
+
+			glDrawElements(GL_TRIANGLES, cubeModel.indicesCount, GL_UNSIGNED_INT, 0);
+		}
+
+		glDrawElements(GL_TRIANGLES, coinModel.indicesCount, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		currentShader = shaderPrograms[0];
+		glUseProgram(currentShader);
+	}
+
+	// player
 	// if (!firstPersonMode)
 	{
 		glBindTexture(GL_TEXTURE_2D, lev);
@@ -225,7 +282,7 @@ void loop() {
 		mat4 model;
 		model = translate(model, player.position);
 		model = rotate(model, radians(player.orientation), vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"), 1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(currentShader, "model"), 1, GL_FALSE, value_ptr(model));
 		glDrawElements(GL_TRIANGLES, playerModel.indicesCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}
@@ -234,8 +291,7 @@ void loop() {
 
 
 
-void set_window_fps(int every=100)
-{
+void set_window_fps(int every=100) {
 	if (frameNumber % every == 0) {
 		char title [50];
 		title [49] = '\0';

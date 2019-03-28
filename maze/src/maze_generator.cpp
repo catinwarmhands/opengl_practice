@@ -36,13 +36,14 @@ bool is_in_interval(ivec2 v, int x1, int x2, int y1, int y2) {
 // сгенерировать матрицу лабиринта размера n строк на m столбцов
 // n и m доблжны быть нечетными
 // алгоритм: https://habr.com/ru/post/262345/
-int* generate_maze_matrix(int n, int m) {
-	enum CellType {
-		UNVISITED = -1,
-		EMPTY     =  0,
-		WALL      =  1
-	};
+enum MazeCellType {
+	UNVISITED = -1,
+	EMPTY     =  0,
+	WALL      =  1,
+	COIN      =  2
+};
 
+int* generate_maze_matrix(int n, int m) {
 	int* maze = new int[n*m];
 
 	for (int i = 0; i < n; ++i) {
@@ -145,6 +146,17 @@ int* generate_maze_matrix(int n, int m) {
 		failsCount = 0;
 	}
 
+	int coinsCount = min(n, m)/2;
+
+	for (int i = 0; i < coinsCount; ++i) {
+		cur = {linearRand(1, m-2), linearRand(1, n-2)};
+		if (maze[cur.y*m + cur.x] != EMPTY) {
+			--i;
+			continue;
+		}
+		maze[cur.y*m + cur.x] = COIN;
+	}
+
 	return maze;
 }
 
@@ -162,7 +174,7 @@ Mesh make_mesh_from_maze_matrix(int* mazeMatrix, int n, int m) {
 		for (int j = 0; j < m; ++j) {
 			cur.x = origin.x + size.x*j;
 			int c = mazeMatrix[i*m+j];
-			if (c == 1) {
+			if (c == WALL) {
 				vec2 offset = {cur.x*size.x, cur.y*size.z};
 				mesh.vertexPositions.insert(mesh.vertexPositions.end(), {
 					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
@@ -300,4 +312,22 @@ Mesh generate_ground_mesh(int n, int m) {
 		(float)n, 0.0f
 	};
 	return mesh;
+}
+
+vector<vec3> get_coins_positions_from_maze_matrix(int* mazeMatrix, int n, int m) {
+	vector<vec3> result;
+	vec3 size = {1, 1, 1};
+	vec2 origin = {0, 0};
+	vec2 cur;
+	for (int i = 0; i < n; ++i) {
+		cur.y = origin.y - size.z*i;
+		for (int j = 0; j < m; ++j) {
+			cur.x = origin.x + size.x*j;
+			int c = mazeMatrix[i*m+j];
+			if (c == COIN) {
+				result.push_back({cur.x, 0, cur.y});
+			}
+		}
+	}
+	return result;
 }

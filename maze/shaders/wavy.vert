@@ -13,7 +13,12 @@ uniform mat4 projection;
 
 void main()
 {
-	gl_Position = projection * view * model * vec4(position, 1.0f);
+	vec3 pos = position;
+	if (pos.y > 0.3f) {
+		pos.x += cos(time)/15.0f;
+		pos.z += sin(time/2.0f)/15.0f;
+	}
+	gl_Position = projection * view * model * vec4(pos, 1.0f);
 	// gl_Position.x *= sin(time);
     TexCoord = texCoord;
 }
