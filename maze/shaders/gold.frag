@@ -119,9 +119,8 @@ vec3 hsv(float h, float s, float v)
 
 void main()
 {
-	// color = vec4(sin(time), 0.3, 0.3, 1);
- //    vec4 sandcolor = vec4(0.9606, 0.6601, 0.1445, 1.0);
-	// color = texture(ourTexture1, TexCoord)*sandcolor;
+    vec4 sandcolor = vec4(0.9606, 0.6601, 0.1445, 1.0);
+	color = texture(ourTexture1, TexCoord)*sandcolor;
 
 	vec2 uv = TexCoord.xy;
     float fadeLR = .5 - abs(uv.x - .5) ;
@@ -129,45 +128,5 @@ void main()
     vec3 pos = vec3( uv * vec2( 3. , 1.) - vec2( 0. , time * .03 ) , time * .01 );
     float n = fadeLR * fadeTB * smoothstep(.6, 1. ,snoise( pos * 60. )) * 10.;
     vec3 col = hsv( n * .2 + .7 , .4 , 1. );
-	color =  vec4( col * vec3( n ) ,n);
-
-	// vec2 coord = TexCoord;
- //    vec4 sandtexture = texture(ourTexture1, coord);
- //    vec4 sandspecular = texture(ourTexture1, coord);
- //    vec2 plusuv = floor(coord -sin(time*10));
-	// vec2 reverseuv = floor(coord +cos(time*10));
- //    vec4 sandspecular2 = texture(ourTexture1, reverseuv);
- //    vec4 sandspecular3 = texture(ourTexture1, plusuv);
-	// sandspecular.xyz = sandspecular.xxx*sandspecular3.yyy*sandspecular2.zzz*vec3(2,2,2);
- //    float d = abs(coord.y - ((1.3 + sin(time*5))*200.0)); //for mouse input: abs(fragCoord.y - iMouse.y)
- //    // d = d*0.003;
- //    d = pow(d,0.6);
- //    d = min(d,1.0);
- //    vec4 sandbase = BlendAddtenth(sandcolor,sandtexture);
- //  	vec4 darkensand = mix(sandtexture,vec4(0,0,0,0), d);
- //    vec4 gradientgen = mix(sandspecular, darkensand, d);
- //    vec4 finalmix = BlendAddthird(sandbase, gradientgen);
- //    color = finalmix;
-
- //    vec4 sandcolor = vec4(0.9606, 0.6601, 0.1445, 1.0);
- //    vec4 sandtexture = texture(ourTexture1, gl_FragCoord   / iResolution.xy);
- //    vec4 sandspecular = texture(ourTexture1, gl_FragCoord   / iResolution.xy);
- //    vec2 plusuv = floor(gl_FragCoord -sin(iMouse.yy*0.03));
-	// vec2 reverseuv = floor(gl_FragCoord +cos(iMouse.yy*0.018));
- //    vec4 sandspecular2 = texture(ourTexture1, reverseuv  / iResolution.xy);
- //    vec4 sandspecular3 = texture(ourTexture1, plusuv  / iResolution.xy);
-	// sandspecular.xyz = sandspecular.xxx*sandspecular3.yyy*sandspecular2.zzz*vec3(2,2,2);
- //    float d = abs(gl_FragCoord .y - ((1.3 + sin(iTime))*200.0)); //for mouse input: abs(fragCoord.y - iMouse.y)
- //    d = d*0.003;
- //    d = pow(d,0.6);
- //    d = min(d,1.0);
- //    vec4 sandbase = BlendAddtenth(sandcolor,sandtexture);
- //  	vec4 darkensand = mix(sandtexture,vec4(0,0,0,0), d);
- //    vec4 gradientgen = mix(sandspecular, darkensand, d);
- //    vec4 finalmix = BlendAddthird(sandbase, gradientgen);
- //    color = finalmix;
+	color += vec4( col * vec3( n ) ,n);
 }
-
-///////////////////
-
-

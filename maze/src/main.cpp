@@ -34,11 +34,10 @@ void setup() {
 	Mesh cubeMesh = read_mesh(rootPath+"models\\cube.obj");
 	cubeModel = make_model(&cubeMesh);
 
-	// Mesh playerMesh = read_mesh(rootPath+"models\\cube.obj");
-	Mesh playerMesh = read_mesh(rootPath+"models\\coin.obj");
-	// for (int i = 0; i < playerMesh.vertexPositions.size(); ++i){
-	// 	playerMesh.vertexPositions[i] *= player.size;
-	// }
+	Mesh playerMesh = read_mesh(rootPath+"models\\cube.obj");
+	for (int i = 0; i < playerMesh.vertexPositions.size(); ++i){
+		playerMesh.vertexPositions[i] *= player.size;
+	}
 	playerModel = make_model(&playerMesh);
 
 	int cubeCount = min(MAZE_N, MAZE_M);
@@ -50,7 +49,11 @@ void setup() {
 		));
 	}
 
-	coinModel = make_model(&cubeMesh);
+	Mesh coinMesh = read_mesh(rootPath+"models\\coin.obj");
+	for (int i = 0; i < coinMesh.vertexPositions.size(); ++i){
+		coinMesh.vertexPositions[i] *= 2;
+	}
+	coinModel = make_model(&coinMesh);
 	coinsPositions = get_coins_positions_from_maze_matrix(mazeMatrix, MAZE_N, MAZE_M);
 
 	groundMesh = generate_ground_mesh(MAZE_N, MAZE_M);
@@ -71,7 +74,7 @@ void setup() {
 	grass = load_texture_from_file(rootPath+"textures\\grass.png");
 	cobblestone = load_texture_from_file(rootPath+"textures\\cobblestone.png", GL_REPEAT, GL_REPEAT);
 	lev = load_texture_from_file(rootPath+"textures\\lev.jpg");
-	noise = load_texture_from_file(rootPath+"textures\\noise.png");
+	coin = load_texture_from_file(rootPath+"textures\\coin.png");
 
 	set_projection();
 
@@ -211,7 +214,7 @@ void loop() {
 		{
 			mat4 model;
 			model = translate(model, cubesPositions[i]);
-			GLfloat angle = radians((GLfloat)currentTime*20.0f*(i+1));
+			GLfloat angle = radians((GLfloat)currentTime*100.0f+i*100);
 			model = rotate(model, angle, vec3(1.0f, 0.3f, 0.5f));
 			glUniformMatrix4fv(glGetUniformLocation(currentShader, "model"), 1, GL_FALSE, value_ptr(model));
 
@@ -250,9 +253,9 @@ void loop() {
 
 	// coins
 	{
-		currentShader = shaderPrograms[0];
+		currentShader = shaderPrograms[2];
 		glUseProgram(currentShader);
-		glBindTexture(GL_TEXTURE_2D, noise);
+		glBindTexture(GL_TEXTURE_2D, coin);
 		glBindVertexArray(coinModel.VAO);
 		glUniformMatrix4fv(glGetUniformLocation(currentShader, "view"),       1, GL_FALSE, value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(currentShader, "projection"), 1, GL_FALSE, value_ptr(projection));
@@ -261,14 +264,14 @@ void loop() {
 		{
 			mat4 model;
 			model = translate(model, coinsPositions[i]);
-			// GLfloat angle = radians((GLfloat)currentTime*20.0f*(i+1));
-			// model = rotate(model, angle, vec3(1.0f, 0.3f, 0.5f));
+			model = rotate(model, radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
+			GLfloat angle = radians((GLfloat)currentTime*100.0f+i*100);
+			model = rotate(model, angle, vec3(0.0f, 0.0f, 1.0f));
 			glUniformMatrix4fv(glGetUniformLocation(currentShader, "model"), 1, GL_FALSE, value_ptr(model));
 
-			glDrawElements(GL_TRIANGLES, cubeModel.indicesCount, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, coinModel.indicesCount, GL_UNSIGNED_INT, 0);
 		}
 
-		glDrawElements(GL_TRIANGLES, coinModel.indicesCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 		currentShader = shaderPrograms[0];
 		glUseProgram(currentShader);

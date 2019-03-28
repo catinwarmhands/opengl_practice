@@ -71,4 +71,4 @@ GLuint cobblestone;
 GLuint grass;
 GLuint lev;
 GLuint cat;
-GLuint noise;
+GLuint coin;

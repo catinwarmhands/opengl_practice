@@ -146,7 +146,7 @@ int* generate_maze_matrix(int n, int m) {
 		failsCount = 0;
 	}
 
-	int coinsCount = min(n, m)/2;
+	int coinsCount = max(n, m);
 
 	for (int i = 0; i < coinsCount; ++i) {
 		cur = {linearRand(1, m-2), linearRand(1, n-2)};
