@@ -57,7 +57,7 @@ int* generate_maze_matrix(int n, int m) {
 
 	stack<ivec2> history;
 
-	ivec2 cur = {linearRand(1, n-2), linearRand(1, m-2)};
+	ivec2 cur = {linearRand(1, m-2), linearRand(1, n-2)};
 	cur.x = cur.x + (1-cur.x%2);
 	cur.y = cur.y + (1-cur.y%2);
 
@@ -112,7 +112,7 @@ int* generate_maze_matrix(int n, int m) {
 	int failsCount = 0;
 	int maxFailsCount = 100;
 	for (int i = 0; i < doorsCount; ++i) {
-		cur = {linearRand(1, n-2), linearRand(1, m-2)};
+		cur = {linearRand(1, m-2), linearRand(1, n-2)};
 		if (maze[cur.y*m + cur.x] != WALL) {
 			--i;
 			continue;
@@ -154,6 +154,8 @@ Mesh make_mesh_from_maze_matrix(int* mazeMatrix, int n, int m) {
 	vec3 size = {1, 1, 1};
 	vec2 origin = {0, 0};
 	vec2 cur;
+	const float oneThird  = 1.0f/3.0f;
+	const float twoThirds = 2.0f/3.0f;
 	int k = 0;
 	for (int i = 0; i < n; ++i) {
 		cur.y = origin.y - size.z*i;
@@ -169,30 +171,35 @@ Mesh make_mesh_from_maze_matrix(int* mazeMatrix, int n, int m) {
 					 0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
 					-0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
 					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+
 					-0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
 					 0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
 					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
 					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
 					-0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
 					-0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
+
 					-0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
 					-0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
 					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
 					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
 					-0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
 					-0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+
 					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
 					 0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
 					 0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
 					 0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
 					 0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
 					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
+					
 					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
 					 0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
 					 0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
 					 0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
 					-0.5f+offset.x, -0.5f*size.y,  0.5f+offset.y,
 					-0.5f+offset.x, -0.5f*size.y, -0.5f+offset.y,
+					
 					-0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
 					 0.5f+offset.x,  0.5f*size.y, -0.5f+offset.y,
 					 0.5f+offset.x,  0.5f*size.y,  0.5f+offset.y,
@@ -215,42 +222,48 @@ Mesh make_mesh_from_maze_matrix(int* mazeMatrix, int n, int m) {
 				// 	3,2,6,
 				// 	3,6,7
 				// });
+				
 				mesh.textureCoords.insert(mesh.textureCoords.end(), {
-					0.0f, 0.0f,
-					1.0f, 0.0f,
-					1.0f, 1.0f,
-					1.0f, 1.0f,
-					0.0f, 1.0f,
-					0.0f, 0.0f,
-					0.0f, 0.0f,
-					1.0f, 0.0f,
-					1.0f, 1.0f,
-					1.0f, 1.0f,
-					0.0f, 1.0f,
-					0.0f, 0.0f,
-					1.0f, 0.0f,
-					1.0f, 1.0f,
-					0.0f, 1.0f,
-					0.0f, 1.0f,
-					0.0f, 0.0f,
-					1.0f, 0.0f,
-					1.0f, 0.0f,
-					1.0f, 1.0f,
-					0.0f, 1.0f,
-					0.0f, 1.0f,
-					0.0f, 0.0f,
-					1.0f, 0.0f,
-					0.0f, 1.0f,
-					1.0f, 1.0f,
-					1.0f, 0.0f,
-					1.0f, 0.0f,
-					0.0f, 0.0f,
-					0.0f, 1.0f,
-					0.0f, 1.0f,
-					1.0f, 1.0f,
+					0.0f, oneThird,
+					1.0f, oneThird,
+					1.0f, twoThirds,
+					1.0f, twoThirds,
+					0.0f, twoThirds,
+					0.0f, oneThird,
+
+					0.0f, oneThird,
+					1.0f, oneThird,
+					1.0f, twoThirds,
+					1.0f, twoThirds,
+					0.0f, twoThirds,
+					0.0f, oneThird,
+
+					0.0f, twoThirds,
+					1.0f, twoThirds,
+					1.0f, oneThird,
+					1.0f, oneThird,
+					0.0f, oneThird,
+					0.0f, twoThirds,
+
+					0.0f, twoThirds,
+					1.0f, twoThirds,
+					1.0f, oneThird,
+					1.0f, oneThird,
+					0.0f, oneThird,
+					0.0f, twoThirds,
+
+					0.0f, oneThird,
+					1.0f, oneThird,
 					1.0f, 0.0f,
 					1.0f, 0.0f,
 					0.0f, 0.0f,
+					0.0f, oneThird,
+
+					0.0f, 1.0f,
+					1.0f, 1.0f,
+					1.0f, twoThirds,
+					1.0f, twoThirds,
+					0.0f, twoThirds,
 					0.0f, 1.0f
 				});
 				// for (int p = indicesCount; p < mesh.indices.size(); ++p) {
@@ -263,5 +276,28 @@ Mesh make_mesh_from_maze_matrix(int* mazeMatrix, int n, int m) {
 	for (int i = 0; i < mesh.vertexPositions.size(); ++i) {
 		mesh.indices.push_back(i);
 	}
+	return mesh;
+}
+
+Mesh generate_ground_mesh(int n, int m) {
+	Mesh mesh;
+	mesh.vertexPositions = {
+		 -0.5f, -0.5f,   +0.5f,
+		m-0.5f, -0.5f,   +0.5f,
+		m-0.5f, -0.5f, -n+0.5f,
+		 -0.5f, -0.5f, -n+0.5f,
+	};
+
+	mesh.indices = {
+		3,2,1,
+		3,1,0
+	};
+
+	mesh.textureCoords = {
+		0.0f,     0.0f,
+		0.0f,     (float)m,
+		(float)n, (float)m,
+		(float)n, 0.0f
+	};
 	return mesh;
 }

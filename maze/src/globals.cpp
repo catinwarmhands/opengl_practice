@@ -26,10 +26,15 @@ double dt           = 0;
 
 // размеры лабиринта и его матрица
 const int MAZE_N = 25;
-const int MAZE_M = 25;
+const int MAZE_M = 15;
 int* mazeMatrix = nullptr;
 Mesh mazeMesh;
 Model mazeModel;
+
+Mesh groundMesh;
+Model groundModel;
+
+Model cubeModel;
 
 Player player;
 Model playerModel;
@@ -46,7 +51,7 @@ bool wireframeMode = false;
 bool mouseLock = true;
 bool fullScreen = false;
 
-mat4 model;
+// mat4 model;
 mat4 view;
 mat4 projection;
 
@@ -57,8 +62,8 @@ float mouseSensitivity = 0.1f;
 
 InputState input;
 
-Model cube;
 
 GLuint cobblestone;
+GLuint grass;
 GLuint lev;
 GLuint cat;

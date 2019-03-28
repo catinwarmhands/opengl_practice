@@ -11,15 +11,7 @@ void set_projection() {
 		projection = perspective(radians(camera.fov), (float)frameBufferSize.x / (float)frameBufferSize.y, 0.1f, 100.0f);
 	} else {
 		const float aspect = (float)frameBufferSize.y / (float)frameBufferSize.x;
-		// const float scale = 5.0;
-		projection = ortho(
-			-camera.scale,
-			camera.scale,
-			-camera.scale * aspect,
-			camera.scale * aspect,
-			0.1f,
-			100.0f
-		);
+		projection = ortho(-camera.scale, camera.scale, -camera.scale * aspect, camera.scale * aspect, 0.1f, 100.0f);
 	}
 }
 
@@ -38,13 +30,9 @@ void setup() {
 
 	glEnable(GL_DEPTH_TEST);
 
-	// return;
-	// system("pause");
-	// return;
-	// maze = generate_maze_model(MAZE_N, MAZE_M);
-	Mesh cubeMesh = read_mesh(rootPath+"models\\cube.obj");
 
-	cube = make_model(&cubeMesh);
+	Mesh cubeMesh = read_mesh(rootPath+"models\\cube.obj");
+	cubeModel = make_model(&cubeMesh);
 
 	Mesh playerMesh = read_mesh(rootPath+"models\\cube.obj");
 	for (int i = 0; i < playerMesh.vertexPositions.size(); ++i){
@@ -55,26 +43,26 @@ void setup() {
 	int cubeCount = min(MAZE_N, MAZE_M);
 	for (int i = 0; i < cubeCount; ++i) {
 		cubePositions.push_back(vec3(
-			linearRand(0, MAZE_N),
+			linearRand(0, MAZE_M),
 			linearRand(2, 5),
-			linearRand(-MAZE_M, 0)
+			linearRand(-MAZE_N, 0)
 		));
 	}
+
+	groundMesh = generate_ground_mesh(MAZE_N, MAZE_M);
+	groundModel = make_model(&groundMesh);
 	
 	// компилируем шейдеры
 	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.vert"));
 	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.frag"));
-
 	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
 
 	// грузим текстуры
-
 	cat = load_texture_from_file(rootPath+"textures\\cat.png");
-	cobblestone = load_texture_from_file(rootPath+"textures\\cobblestone.png");
+	grass = load_texture_from_file(rootPath+"textures\\grass.png");
+	cobblestone = load_texture_from_file(rootPath+"textures\\cobblestone.png", GL_REPEAT, GL_REPEAT);
 	lev = load_texture_from_file(rootPath+"textures\\harry.jpg");
 
-
-	view = translate(view, vec3(0.0f, 0.0f, -3.0f));
 	set_projection();
 
 	double x, y;
@@ -134,7 +122,7 @@ void do_movement() {
 			new_position -= normalize(cross(camera.front, camera.up)) * speed;
 		if (input.keys[GLFW_KEY_D])
 			new_position += normalize(cross(camera.front, camera.up)) * speed;
-		new_position.y = 0;
+		new_position.y = -player.size/2;
 		if (valid_player_position(new_position)) {
 			player.position = new_position;
 		}
@@ -163,7 +151,7 @@ void do_movement() {
 		if (input.keys[GLFW_KEY_D])
 			new_position.z -= speed;
 
-		new_position.y = 0;
+		new_position.y = -player.size/2;
 		if (valid_player_position(new_position)) {
 			player.position = new_position;
 		}
@@ -198,25 +186,34 @@ void loop() {
 
 	{
 		glBindTexture(GL_TEXTURE_2D, cat);
-		glBindVertexArray(cube.VAO);
+		glBindVertexArray(cubeModel.VAO);
 		for(GLuint i = 0; i < cubePositions.size(); i++)
 		{
 			mat4 model;
 			model = translate(model, cubePositions[i]);
 			GLfloat angle = radians((GLfloat)currentTime*20.0f*(i+1));
 			model = rotate(model, angle, vec3(1.0f, 0.3f, 0.5f));
-			glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"), 1, GL_FALSE, value_ptr(model));
 
-			glDrawElements(GL_TRIANGLES, cube.indicesCount, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, cubeModel.indicesCount, GL_UNSIGNED_INT, 0);
 		}
 		glBindVertexArray(0);
 	}
 
 	{
 		glBindTexture(GL_TEXTURE_2D, cobblestone);
+		glBindVertexArray(groundModel.VAO);
+		mat4 model;
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"), 1, GL_FALSE, value_ptr(model));
+		glDrawElements(GL_TRIANGLES, groundModel.indicesCount, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+	}
+
+	{
+		glBindTexture(GL_TEXTURE_2D, grass);
 		glBindVertexArray(mazeModel.VAO);
 		mat4 model;
-		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"), 1, GL_FALSE, value_ptr(model));
 		glDrawElements(GL_TRIANGLES, mazeModel.indicesCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}
@@ -228,7 +225,7 @@ void loop() {
 		mat4 model;
 		model = translate(model, player.position);
 		model = rotate(model, radians(player.orientation), vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),      1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"), 1, GL_FALSE, value_ptr(model));
 		glDrawElements(GL_TRIANGLES, playerModel.indicesCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}
