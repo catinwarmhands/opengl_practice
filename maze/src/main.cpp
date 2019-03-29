@@ -40,7 +40,7 @@ void load_resources() {
 	cobblestone = load_texture_from_file(rootPath+"textures\\cobblestone.png", GL_REPEAT, GL_REPEAT);
 	lev = load_texture_from_file(rootPath+"textures\\lev.jpg");
 	coin = load_texture_from_file(rootPath+"textures\\coin.jpg");
-	noise = load_texture_from_file(rootPath+"textures\\noise.png", GL_REPEAT, GL_REPEAT);
+	noise = load_texture_from_file(rootPath+"textures\\noise.png", GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR);
 
 	// загружаем шрифты
 	fs = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT);

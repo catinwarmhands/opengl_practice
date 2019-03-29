@@ -2,7 +2,7 @@
 
 #include "libs.cpp"
 
-GLuint load_texture_from_file(string filePath, GLint wrapS=GL_CLAMP_TO_EDGE, GLint wrapT=GL_CLAMP_TO_EDGE) {
+GLuint load_texture_from_file(string filePath, GLint wrapS=GL_CLAMP_TO_EDGE, GLint wrapT=GL_CLAMP_TO_EDGE, GLint filterMin=GL_NEAREST, GLint filterMag=GL_NEAREST) {
 	stbi_set_flip_vertically_on_load(true);
 	int width, height, depth;
 	void* data = stbi_load(filePath.c_str(), &width, &height, &depth, STBI_rgb);
@@ -19,8 +19,8 @@ GLuint load_texture_from_file(string filePath, GLint wrapS=GL_CLAMP_TO_EDGE, GLi
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     wrapS);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     wrapT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMin);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMag);
     stbi_image_free(data);
     // cout << "[load_texture_from_file] Texture '" << filePath << "' loaded OK" << endl;
     return textureID;
