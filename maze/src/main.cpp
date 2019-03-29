@@ -222,6 +222,7 @@ void process_input() {
 		if (input.keys[GLFW_KEY_D])
 			newPosition += normalize(cross(camera.front, camera.up)) * speed;
 
+		// cameraOffset = {0, 0.5, 0};
 		cameraOffset = - 3.0f*camera.front+vec3(0,0.7,0);
 	} else {
 		if (input.keys[GLFW_KEY_W])
