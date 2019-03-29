@@ -42,16 +42,17 @@ void load_resources() {
 	fs = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT);
 	if (fs == NULL) {
 		cout << "[font loading] Could not create stash" << endl;
-		exit(0);
+		exit(1);
 	}
 
 	fontNormal = fonsAddFont(fs, "sans", (rootPath+"fonts\\DroidSerif-Regular.ttf").c_str());
 	if (fontNormal == FONS_INVALID) {
 		cout << "[font loading] Could not add font normal" << endl;
-		exit(0);
+		exit(1);
 	}
 }
 
+// поставить камеру в положение по умолчанию
 void set_default_camera() {
 	if (firstPersonMode) {
 		double x, y;
@@ -62,12 +63,14 @@ void set_default_camera() {
 	}
 }
 
+// установить сообщение со счетом
 void set_score_message() {
 	ostringstream oss;
 	oss << "Монеты: " << score << "/" << coinsPositions.size();
 	scoreMessage = oss.str();
 }
 
+// установить сообщение с временем
 void set_time_message() {
 	ostringstream oss;
 	oss.precision(2);
@@ -75,6 +78,7 @@ void set_time_message() {
 	timeMessage = oss.str();
 }
 
+// установить сообщение с лучшим временем
 void set_best_time_message() {
 	ostringstream oss;
 	oss.precision(2);
@@ -86,6 +90,7 @@ void set_best_time_message() {
 	bestTimeMessage = oss.str();
 }
 
+// установить матрицу проекции
 void set_projection() {
 	if (firstPersonMode) {
 		projection = perspective(radians(camera.fov), (float)frameBufferSize.x / (float)frameBufferSize.y, 0.1f, 100.0f);
@@ -95,6 +100,7 @@ void set_projection() {
 	}
 }
 
+// перезапустить игру
 void restart_game() {
 	mazeSize = {linearRand(11, 31), linearRand(11, 31)};
 	mazeSize.x = mazeSize.x + (1-mazeSize.x%2);
@@ -120,7 +126,6 @@ void restart_game() {
 	glfwSetTime(0);
 }
 
-
 // код, который выполнится один раз до начала игрового цикла
 void setup() {
 	// инициализация генератора рандомных чисел
@@ -133,6 +138,8 @@ void setup() {
 	set_default_camera();
 }
 
+// вернет true, если игрок пересекается со стенкой
+// алгоритм AABB
 bool check_player_collision(vec3 pos) {
 	pos.x += player.size/2;
 	pos.z += player.size/2;
@@ -153,6 +160,7 @@ bool check_player_collision(vec3 pos) {
 	return false;
 }
 
+// корректирует новую позицию игрока
 vec3 do_player_collision(vec3 pos) {
 	if (!check_player_collision(pos) || noclipMode)
 		return pos;
@@ -167,71 +175,139 @@ vec3 do_player_collision(vec3 pos) {
 	return player.position;
 }
 
-void do_movement() {
-	camera.yaw   += input.cursorOffset.x;
-	camera.pitch += input.cursorOffset.y;
-	input.cursorOffset.x = 0;
-	input.cursorOffset.y = 0;
-
-	if (camera.pitch > 89.0f)
-		camera.pitch =  89.0f;
-	if (camera.pitch < -89.0f)
-		camera.pitch = -89.0f;
-
+// пересчитать направляющий вектор камеры
+void update_camera_front() {
 	vec3 front;
 	front.x = cos(radians(camera.pitch)) * cos(radians(camera.yaw));
 	front.y = sin(radians(camera.pitch));
 	front.z = cos(radians(camera.pitch)) * sin(radians(camera.yaw));
 	camera.front = normalize(front);
+}
 
-	float speed = cameraSpeed*dt;
+// обработка инпута
+void process_input() {
+	// скролл
+	if (input.hasScrollOffset) {
+		camera.fov   -= input.scrollOffset.y;
+		camera.scale -= input.scrollOffset.y;
+		if (camera.fov < minFov)
+			camera.fov = minFov;
+		if (camera.scale < minScale)
+			camera.scale = minScale;
+		input.scrollOffset.x = 0;
+		input.scrollOffset.y = 0;
+		input.hasScrollOffset = false;
+		set_projection();
+	}
 
+	// вращение камеры
+	if (input.hasCursorOffset) {
+		camera.yaw   += input.cursorOffset.x;
+		camera.pitch += input.cursorOffset.y;
+		input.cursorOffset.x = 0;
+		input.cursorOffset.y = 0;
+		input.hasCursorOffset = false;
+		if (camera.pitch > 89.0f)
+			camera.pitch =  89.0f;
+		if (camera.pitch < -89.0f)
+			camera.pitch = -89.0f;
+	}
 
-	vec3 new_position = player.position;
+	// камеру нужно обновлять именно в этом месте
+	update_camera_front();
+
+	// движение игрока (и камеры за ним)
+	float speed = player.speed*dt;
+	vec3 newPosition = player.position;
+	vec3 cameraOffset;
 	if (firstPersonMode) {
 		if (input.keys[GLFW_KEY_W])
-			new_position -= speed * normalize(cross(cross(camera.front, camera.up), camera.up));
+			newPosition -= speed * normalize(cross(cross(camera.front, camera.up), camera.up));
 		if (input.keys[GLFW_KEY_S])
-			new_position += speed * normalize(cross(cross(camera.front, camera.up), camera.up));
+			newPosition += speed * normalize(cross(cross(camera.front, camera.up), camera.up));
 		if (input.keys[GLFW_KEY_A])
-			new_position -= normalize(cross(camera.front, camera.up)) * speed;
+			newPosition -= normalize(cross(camera.front, camera.up)) * speed;
 		if (input.keys[GLFW_KEY_D])
-			new_position += normalize(cross(camera.front, camera.up)) * speed;
-		new_position.y = -player.size/2;
-		player.position = do_player_collision(new_position);
-		camera.position = player.position - 3.0f*camera.front+vec3(0,0.7,0);
+			newPosition += normalize(cross(camera.front, camera.up)) * speed;
 
-		// if (input.keys[GLFW_KEY_W])
-		// 	camera.position += speed * camera.front;
-		// if (input.keys[GLFW_KEY_S])
-		// 	camera.position -= speed * camera.front;
-		// if (input.keys[GLFW_KEY_A])
-		// 	camera.position -= normalize(cross(camera.front, camera.up)) * speed;
-		// if (input.keys[GLFW_KEY_D])
-		// 	camera.position += normalize(cross(camera.front, camera.up)) * speed; 
-		// if (input.keys[GLFW_KEY_SPACE])
-		// 	camera.position += speed * camera.up; 
-		// if (input.keys[GLFW_KEY_LEFT_CONTROL])
-		// 	camera.position -= speed * camera.up; 
-
+		cameraOffset = - 3.0f*camera.front+vec3(0,0.7,0);
 	} else {
 		if (input.keys[GLFW_KEY_W])
-			new_position.x -= speed;
+			newPosition.x -= speed;
 		if (input.keys[GLFW_KEY_S])
-			new_position.x += speed;
+			newPosition.x += speed;
 		if (input.keys[GLFW_KEY_A])
-			new_position.z += speed;
+			newPosition.z += speed;
 		if (input.keys[GLFW_KEY_D])
-			new_position.z -= speed;
+			newPosition.z -= speed;
 
-		new_position.y = -player.size/2;
-		player.position = do_player_collision(new_position);
-		camera.position = player.position + vec3(0,10,0);
+		cameraOffset = vec3(0,10,0);
 		camera.yaw = 180;
-		camera.pitch = -90;
+		camera.pitch = -89;
+	}
+
+	newPosition.y = -player.size/2;
+	player.position = do_player_collision(newPosition);
+	camera.position = player.position + cameraOffset;
+
+	// закрытие окна
+	if (input.keys[GLFW_KEY_ESCAPE]) {
+		input.keys[GLFW_KEY_ESCAPE] = false;
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
+
+	// изменение вида камеры
+	if (input.keys[GLFW_KEY_Q]) {
+		input.keys[GLFW_KEY_Q] = false;
+		firstPersonMode = !firstPersonMode;
+		set_projection();
+	}
+
+	// рестарт
+	if (input.keys[GLFW_KEY_R]) {
+		input.keys[GLFW_KEY_R] = false;
+		restart_game();
+	}
+
+	// ноклип
+	if (input.keys[GLFW_KEY_N]) {
+		input.keys[GLFW_KEY_N] = false;
+		noclipMode = !noclipMode;
+	}
+
+	// отрисовка сетки
+	if (input.keys[GLFW_KEY_F]) {
+		input.keys[GLFW_KEY_F] = false;
+		wireframeMode = !wireframeMode;
+		if (wireframeMode) 
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		else
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+
+	// захват мышки
+	if (input.keys[GLFW_KEY_M]) {
+		input.keys[GLFW_KEY_M] = false;
+		mouseLock = !mouseLock;
+		if (mouseLock) 
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		else
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
+	//фуллскрин
+	if (input.keys[GLFW_KEY_F11]) {
+		input.keys[GLFW_KEY_F11] = false;
+		fullScreen = !fullScreen;
+		const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		if (fullScreen)
+			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
+		else
+			glfwSetWindowMonitor(window, 0, 100, 100, defaultWindowSize.x, defaultWindowSize.y, mode->refreshRate);
 	}
 }
 
+// отрендерить сцену
 void render_scene() {
 	//очищаем экран
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -334,6 +410,7 @@ void render_scene() {
 	glUseProgram(0);
 }
 
+// отрендерить hud
 void render_text() {
 	// понятия не имею зачем это нужно, но без этого не работает
 	glEnable(GL_BLEND);
@@ -357,7 +434,7 @@ void render_text() {
 		fonsSetSize(fs, 124.0f);
 		fonsSetColor(fs, white);
 		fonsSetAlign(fs, FONS_ALIGN_CENTER | FONS_ALIGN_BOTTOM);
-		fonsDrawText(fs, frameBufferSize.x/2, frameBufferSize.y/2, "Победа", NULL);
+		fonsDrawText(fs, frameBufferSize.x/2, frameBufferSize.y/2, winMessage.c_str(), NULL);
 
 		fonsSetSize(fs, 48.0f);
 		fonsSetAlign(fs, FONS_ALIGN_CENTER | FONS_ALIGN_TOP);
@@ -374,16 +451,17 @@ void render_text() {
 		fonsSetSize(fs, 28.0f);
 		fonsSetAlign(fs, FONS_ALIGN_CENTER | FONS_ALIGN_TOP);
 		fonsSetColor(fs, red);
-		fonsDrawText(fs, frameBufferSize.x/2, dy, "NOCLIP MODE", NULL);
+		fonsDrawText(fs, frameBufferSize.x/2, dy, noclipMessage.c_str(), NULL);
 	}
 
 	glEnable(GL_DEPTH_TEST);
 }
 
-
+// проверяем, не подобрал ли игрок монету
 void check_coins() {
 	for (int i = 0; i < coinsPositions.size(); ++i) {
 		if (distance(player.position, coinsPositions[i]) < player.size) {
+			// если подобрал, то увеличиваем счет и убираем её с глаз долой
 			coinsPositions[i] = {0,-999,0};
 			++score;
 			set_score_message();
@@ -393,7 +471,7 @@ void check_coins() {
 
 // код, который будет выполняться каждый кадр
 void loop() {
-	do_movement();
+	process_input();
 	check_coins();
 
 	if (score >= coinsPositions.size() && !isWin) {
@@ -404,11 +482,15 @@ void loop() {
 			bestTime = winTime;
 	}
 
-	set_time_message();
+	if (!isWin)
+		set_time_message();
+
 	render_scene();
 	render_text();
 }
 
+// вывести в шапку окна dt и приблизительное количество фпс
+// по умолчанию выводит каждые 100 кадров
 void set_window_fps(int every=100) {
 	if (frameNumber % every == 0) {
 		char title [50];
@@ -419,61 +501,20 @@ void set_window_fps(int every=100) {
 	}
 }
 
-// функция, обрабатывающая нажатие на кнопки
+// коллбеки на события
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) //если нажали на ESC
-        glfwSetWindowShouldClose(window, GLFW_TRUE); //то окно надо закрыть
-    if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
-    	firstPersonMode = !firstPersonMode;
-    	set_projection();
-    }
-    if (key == GLFW_KEY_F && action == GLFW_PRESS) {
-    	wireframeMode = !wireframeMode;
-    	if (wireframeMode) 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		else
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-    if (key == GLFW_KEY_M && action == GLFW_PRESS) {
-    	mouseLock = !mouseLock;
-    	if (mouseLock) 
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		else
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-    if (key == GLFW_KEY_F11 && action == GLFW_PRESS) {
-    	fullScreen = !fullScreen;
-		const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    	if (fullScreen) {
-			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
-    	}
-		else {
-			glfwSetWindowMonitor(window, 0, 100, 100, defaultWindowSize.x, defaultWindowSize.y, mode->refreshRate);
-		}
-    }
-
-    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-    	restart_game();
-    }
-    if (key == GLFW_KEY_N && action == GLFW_PRESS) {
-    	noclipMode = !noclipMode;
-    }
-    
-
 	if (action == GLFW_PRESS)
 		input.keys[key] = true;
 	else if(action == GLFW_RELEASE)
 		input.keys[key] = false;
 }
 
-void window_size_callback(GLFWwindow* window, int width, int height)
-{
+void window_size_callback(GLFWwindow* window, int width, int height) {
 	windowSize.x = width;
 	windowSize.y = height;
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	frameBufferSize.x = width;
 	frameBufferSize.y = height;
 	set_projection();
@@ -486,14 +527,14 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 		input.cursorOffset.y = (input.cursorPosition.y - y)*mouseSensitivity;
 		input.cursorPosition.x = x;
 		input.cursorPosition.y = y;
+		input.hasCursorOffset = true;
 	}
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	// if (fov >= 1.0f && fov <= 45.0f)
-	camera.fov -= yoffset;
-	camera.scale -= yoffset;
-	set_projection();
+	input.scrollOffset.x = xoffset;
+	input.scrollOffset.y = yoffset;
+	input.hasScrollOffset = true;
 }
 
 int main() {
@@ -504,7 +545,7 @@ int main() {
 	if (!glfwInit()) {
 		// если не запускается, то выключаемся
 		cout << "[GLFW] failed to init" << endl;
-		return 1;
+		exit(1);
 	}
 
 	// создаем окно
@@ -515,7 +556,7 @@ int main() {
 		// то отключаемся
 		cout << "[GLFW] failed to open window" << endl;
 		glfwTerminate();
-		return 1;
+		exit(1);
 	}
 
 	// узнаем размер фреймбуфера
@@ -524,31 +565,24 @@ int main() {
 	// будем рисовать в это окно
 	glfwMakeContextCurrent(window);
 
-	// коллбеки
-	glfwSetKeyCallback(window, key_callback);
-	glfwSetCursorPosCallback(window, cursor_pos_callback);
-	glfwSetWindowSizeCallback(window, window_size_callback);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetScrollCallback(window, scroll_callback);
-
-
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 	// запускаем glew
 	GLenum glewErr = glewInit();
 	if (glewErr != GLEW_OK) {
 		// если не запускается, то отключаемся
 		cout << "[GLEW] failed to init: " << glewGetErrorString(glewErr) << endl;
 		glfwTerminate();
-		return 1;
+		exit(1);
 	}
 
+	// вешаем коллбеки
+	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, cursor_pos_callback);
+	glfwSetWindowSizeCallback(window, window_size_callback);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
-	// glViewport(0, 0, resolution.x, resolution.y);
-
-	// цвет очистки экрана - белый
-	// glClearColor(1, 1, 1, 0);
-
+	// лочим мышку
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// наша инициализация
 	setup();

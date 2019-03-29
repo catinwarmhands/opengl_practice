@@ -36,7 +36,7 @@ GLuint compile_shader_from_file(const string& filePath)  {
 		exit(1);
 		return 0;
 	}
-	cout << "[compile_shader_from_file] Shader '" << filePath << "' compilation OK" << endl;
+	// cout << "[compile_shader_from_file] Shader '" << filePath << "' compilation OK" << endl;
 	return shaderID;
 }
 
@@ -84,7 +84,7 @@ GLuint link_shader_program(GLuint vertexShader, GLuint fragmentShader) {
 		exit(1);
 		return 0;
 	}
-	cout << "[link_shader_program] ShaderProgram validation OK" << endl;
+	// cout << "[link_shader_program] ShaderProgram validation OK" << endl;
 	glDetachShader(programID, vertexShader);
 	glDetachShader(programID, fragmentShader);
 	return programID;

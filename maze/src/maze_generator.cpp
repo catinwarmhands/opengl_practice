@@ -357,9 +357,9 @@ vector<vec3> generate_cubes_positions(int n, int m) {
 	vector<vec3> cubesPositions;
 	for (int i = 0; i < cubeCount; ++i) {
 		cubesPositions.push_back(vec3(
-			linearRand(0, m),
-			linearRand(3, 6),
-			linearRand(-n, 0)
+			linearRand(0.0f, (float)m),
+			linearRand(2.0f, 5.0f),
+			linearRand((float)-n, 0.0f)
 		));
 	}
 	return cubesPositions;

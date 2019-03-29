@@ -51,6 +51,7 @@ xcopy /e/i/y bin release\bin
 xcopy /e/i/y textures release\textures
 xcopy /e/i/y shaders release\shaders
 xcopy /e/i/y models release\models
+xcopy /e/i/y fonts release\fonts
 
 if not ERRORLEVEL == 0 (
 	call cleanup
