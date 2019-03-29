@@ -18,17 +18,20 @@ void load_resources() {
 
 	Mesh coinMesh = read_mesh(rootPath+"models\\coin.obj");
 	for (int i = 0; i < coinMesh.vertexPositions.size(); ++i)
-		coinMesh.vertexPositions[i] *= 2;
+		coinMesh.vertexPositions[i] /= 2;
 	coinModel = make_model(&coinMesh);
 
 	// компилируем шейдеры
-	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.vert"));
+	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic2D.vert"));
+	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic3D.vert"));
 	vertexShaders.push_back(compile_shader_from_file(rootPath+"shaders\\wavy.vert"));
 	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\basic.frag"));
 	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\gold.frag"));
-	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[0]));
+	fragmentShaders.push_back(compile_shader_from_file(rootPath+"shaders\\sky.frag"));
 	shaderPrograms.push_back(link_shader_program(vertexShaders[1], fragmentShaders[0]));
-	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[1]));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[2], fragmentShaders[0]));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[1], fragmentShaders[1]));
+	shaderPrograms.push_back(link_shader_program(vertexShaders[0], fragmentShaders[2]));
 	currentShader = shaderPrograms[0];
 
 	// грузим текстуры
@@ -36,7 +39,8 @@ void load_resources() {
 	grass = load_texture_from_file(rootPath+"textures\\grass.png");
 	cobblestone = load_texture_from_file(rootPath+"textures\\cobblestone.png", GL_REPEAT, GL_REPEAT);
 	lev = load_texture_from_file(rootPath+"textures\\lev.jpg");
-	coin = load_texture_from_file(rootPath+"textures\\coin.png");
+	coin = load_texture_from_file(rootPath+"textures\\coin.jpg");
+	noise = load_texture_from_file(rootPath+"textures\\noise.png", GL_REPEAT, GL_REPEAT);
 
 	// загружаем шрифты
 	fs = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT);
@@ -124,18 +128,6 @@ void restart_game() {
 
 	previousTime = currentTime = 0;
 	glfwSetTime(0);
-}
-
-// код, который выполнится один раз до начала игрового цикла
-void setup() {
-	// инициализация генератора рандомных чисел
-	srand(time(0));
-
-	glClearColor(0.5, 0.6, 0.7, 0);
-
-	load_resources();
-	restart_game();
-	set_default_camera();
 }
 
 // вернет true, если игрок пересекается со стенкой
@@ -315,6 +307,23 @@ void render_scene() {
 	mat4 view;
 	view = lookAt(camera.position, camera.position + camera.front, camera.up);
 
+	// skybox
+	{
+		glDisable(GL_DEPTH_TEST);
+		currentShader = shaderPrograms[3];
+		glUseProgram(currentShader);
+		glUniform1f( glGetUniformLocation(currentShader, "time"), (GLfloat)currentTime);
+		glUniform2fv(glGetUniformLocation(currentShader, "cursorPosition"), 1, value_ptr(input.cursorPosition));
+		glUniform2fv(glGetUniformLocation(currentShader, "resolution"),    1, value_ptr(vec2(frameBufferSize)));
+		glBegin(GL_QUADS);
+			glVertex2f(-1, -1);
+			glVertex2f( 1, -1);
+			glVertex2f( 1,  1);
+			glVertex2f(-1,  1);
+		glEnd();
+	}
+
+	glEnable(GL_DEPTH_TEST);
 	currentShader = shaderPrograms[0];
 	glUseProgram(currentShader);
 
@@ -322,7 +331,6 @@ void render_scene() {
 	glUniformMatrix4fv(glGetUniformLocation(currentShader, "projection"), 1, GL_FALSE, value_ptr(projection));
 	glUniform1f(       glGetUniformLocation(currentShader, "time"), (GLfloat)currentTime);
 
-	glEnable(GL_DEPTH_TEST);
 
 	//cubes
 	{
@@ -373,7 +381,14 @@ void render_scene() {
 	{
 		currentShader = shaderPrograms[2];
 		glUseProgram(currentShader);
+
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, coin);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, noise);
+		glUniform1i(glGetUniformLocation(currentShader, "ourTexture1"), 0);
+		glUniform1i(glGetUniformLocation(currentShader, "ourTexture2"), 1);
+
 		glBindVertexArray(coinModel.VAO);
 		glUniformMatrix4fv(glGetUniformLocation(currentShader, "view"),       1, GL_FALSE, value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(currentShader, "projection"), 1, GL_FALSE, value_ptr(projection));
@@ -393,6 +408,7 @@ void render_scene() {
 		glBindVertexArray(0);
 		currentShader = shaderPrograms[0];
 		glUseProgram(currentShader);
+		glActiveTexture(GL_TEXTURE0);
 	}
 
 	// player
@@ -408,6 +424,9 @@ void render_scene() {
 		glBindVertexArray(0);
 	}
 	glUseProgram(0);
+
+	// glActiveTexture(GL_TEXTURE0);
+	// glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 // отрендерить hud
@@ -469,6 +488,21 @@ void check_coins() {
 	}
 }
 
+// код, который выполнится один раз до начала игрового цикла
+void setup() {
+	// инициализация генератора рандомных чисел
+	srand(time(0));
+
+	// узнаем корневую директорию (для доступа к ресурсам)
+	rootPath = get_root_path();
+
+	glClearColor(0.5, 0.6, 0.7, 0);
+
+	load_resources();
+	restart_game();
+	set_default_camera();
+}
+
 // код, который будет выполняться каждый кадр
 void loop() {
 	process_input();
@@ -490,7 +524,6 @@ void loop() {
 }
 
 // вывести в шапку окна dt и приблизительное количество фпс
-// по умолчанию выводит каждые 100 кадров
 void set_window_fps(int every=100) {
 	if (frameNumber % every == 0) {
 		char title [50];
@@ -538,9 +571,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 int main() {
-	// узнаем корневую директорию (для доступа к ресурсам)
-	rootPath = get_root_path();
-
 	// запускаем glfw
 	if (!glfwInit()) {
 		// если не запускается, то выключаемся
@@ -589,6 +619,7 @@ int main() {
 
 	// пока окно не должно закрыться
 	while (!glfwWindowShouldClose(window)) {
+		// узнаем время с прошлого кадра
 		previousTime = currentTime;
 		currentTime = glfwGetTime();
 		dt = currentTime - previousTime;
@@ -605,7 +636,7 @@ int main() {
 		// увеличиваем номер текущего кадра
 		frameNumber++;
 
-		// выводим на экран (это вместо glFlush)
+		// меняем буферы
 		glfwSwapBuffers(window);
 	}
 

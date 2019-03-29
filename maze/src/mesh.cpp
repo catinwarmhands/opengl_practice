@@ -13,11 +13,6 @@ struct Mesh {
 // считать меш из .obj файла
 // никаких оптимизаций для общих вершин не проводится, не успел просто
 Mesh read_mesh(const string& filePath) {
-	// 	vector<tinyobj::shape_t> shapes;
-	// vector<tinyobj::material_t> materials;
-	// string warn, err;
-	// tinyobj::attrib_t attrib;
-	// bool ok = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str());
 	Mesh mesh;
 	vector<tinyobj::shape_t> shapes;
 	vector<tinyobj::material_t> materials;
@@ -28,9 +23,7 @@ Mesh read_mesh(const string& filePath) {
 		exit(0);
 	}
 
-	// PrintInfo(shapes, materials);
-	// exit(0);
-	
+	int positionsSize = 0;
 	for (size_t i = 0; i < shapes.size(); i++) {
 		for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
 			for (int j = 0; j < 3; ++j) {
@@ -44,9 +37,10 @@ Mesh read_mesh(const string& filePath) {
 		}
 		for (size_t f = 0; f < shapes[i].mesh.indices.size() / 3; f++) {
 			for (int j = 0; j < 3; ++j) {
-				mesh.indices.push_back(shapes[i].mesh.indices[3*f+j]);
+				mesh.indices.push_back(positionsSize+shapes[i].mesh.indices[3*f+j]);
 			}
 		}
+		positionsSize = mesh.vertexPositions.size()/3;
 	}
 
 	return mesh;

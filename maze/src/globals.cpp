@@ -61,6 +61,7 @@ GLuint grass;
 GLuint lev;
 GLuint cat;
 GLuint coin;
+GLuint noise;
 
 // количество собранных монет и лучшее время
 int score = 0;
