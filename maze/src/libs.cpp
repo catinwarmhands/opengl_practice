@@ -53,6 +53,7 @@ using namespace glm;
 	#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+#define FONS_FORCE_FOPEN
 #define FONTSTASH_IMPLEMENTATION
 #include "../libs/fontstash/src/fontstash.h"
 #define GLFONTSTASH_IMPLEMENTATION	

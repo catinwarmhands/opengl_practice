@@ -923,7 +923,11 @@ int fonsAddFont(FONScontext* stash, const char* name, const char* path)
 	unsigned char* data = NULL;
 
 	// Read in the font data.
-	fp = fons__fopen(path, "rb");
+	#ifdef FONS_FORCE_FOPEN
+		fp = fopen(path, "rb");
+	#else
+		fp = fons__fopen(path, "rb");
+	#endif
 	if (fp == NULL) goto error;
 	fseek(fp,0,SEEK_END);
 	dataSize = (int)ftell(fp);

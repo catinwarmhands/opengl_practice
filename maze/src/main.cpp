@@ -49,9 +49,14 @@ void load_resources() {
 		exit(1);
 	}
 
-	fontNormal = fonsAddFont(fs, "sans", (rootPath+"fonts\\DroidSerif-Regular.ttf").c_str());
+	string fontPath = rootPath+"fonts\\DroidSerif-Regular.ttf";
+	// string fontPath2 = "D:\\books\\магистратура\\OpenGL (Матвеева Ю. В.)\\opengl\\maze\\fonts\\DroidSerif-Regular.ttf";
+	// ofstream out("out.txt");
+	// out << fontPath1.c_str() << endl << fontPath2.c_str() << endl;
+	// exit(0);
+	fontNormal = fonsAddFont(fs, "sans", fontPath.c_str());
 	if (fontNormal == FONS_INVALID) {
-		cout << "[font loading] Could not add font normal" << endl;
+		cout << "[font loading] Could not add font '" << fontPath << "'" << endl;
 		exit(1);
 	}
 }
